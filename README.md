@@ -12,6 +12,7 @@ Tiếng việt :
 - Trong đó Admin có quyền CRUD toàn bộ dữ liệu học sinh
 - Admin chỉ có thể Create , Read , Delete dữ liệu User , tuy nhiên Create đối với User chỉ có ủy quyền ROLE ADMIN sang một User do Admin đang chỉ định , ngay sau khi xác thực mật khẩu Admin sẽ mất ROLE ADMIN ngay lập tức và phải đăng nhập lại , còn ROLE ADMIN đã được ủy sang cho User đã được chỉ định ( áp dụng trong những trường hợp lớp học thay thế GVCN mà theo thực tế một lớp học chỉ có duy nhất một GVCN )
 
+
 - User có thể Read , Update
 - Trong đó Read dữ liệu học sinh ( con của họ ) được thể hiện trên giao diện phần mềm thông qua số điện thoại , nếu số điện của bố mẹ mà học sinh đã đăng ký với GVCN trùng khớp với số điện thoại của User hiện tại đang đăng nhập thì sẽ hiển thị dữ liệu học sinh đó trên giao diện phần mềm
 - User chỉ có thể Read , Update dữ liệu của bản thân họ
@@ -28,6 +29,7 @@ English :
 
 - All student data may be CRUD by the administrator
 - Only Admin has the ability to Create, Read, and Delete User data; however, Create for User only grants ROLE ADMIN authorization to a User that Admin designates, following password authentication. The selected User has been assigned the ROLE ADMIN, which will be instantly lost by the Admin and they will need to log in again (applied in circumstances where the class substitutes the teacher in practice). There is actually just one homeroom instructor in a classroom
+
 
 - The user is able to read and update
 - Wherein, if the phone number of the parents with whom the student has registered with the teacher matches, the student's data (their kid) is shown on the software interface via phone number. The student's data will be displayed on the software interface together with the phone number of the user who is presently logged in
