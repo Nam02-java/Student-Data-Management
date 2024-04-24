@@ -14,7 +14,7 @@ Tiếng việt :
 
 
 - User có thể Read , Update
-- Trong đó Read dữ liệu học sinh ( con của họ ) được thể hiện trên giao diện phần mềm thông qua số điện thoại , nếu số điện của bố mẹ mà học sinh đã đăng ký với GVCN trùng khớp với số điện thoại của User hiện tại đang đăng nhập thì sẽ hiển thị dữ liệu học sinh đó trên giao diện phần mềm
+- Trong đó việc User Read dữ liệu học sinh ( con của họ ) được thể hiện trên giao diện phần mềm thông qua số điện thoại , nếu số điện của bố mẹ mà học sinh đã đăng ký với GVCN trùng khớp với số điện thoại của User hiện tại đang đăng nhập thì sẽ hiển thị dữ liệu học sinh đó trên giao diện phần mềm
 - User chỉ có thể Read , Update dữ liệu của bản thân họ
 
 ---------------------------------------------------------------------
@@ -32,5 +32,5 @@ English :
 
 
 - The user is able to read and update
-- Wherein, if the phone number of the parents with whom the student has registered with the teacher matches, the student's data (their kid) is shown on the software interface via phone number. The student's data will be displayed on the software interface together with the phone number of the user who is presently logged in
+- When the student's phone number matches the parent's phone number that the student registered with the teacher, the User can read the student's data (their child) via the phone number on the software interface. That student data will appear on the software interface when you log in right now.
 - Users can only Read and Update their own data
