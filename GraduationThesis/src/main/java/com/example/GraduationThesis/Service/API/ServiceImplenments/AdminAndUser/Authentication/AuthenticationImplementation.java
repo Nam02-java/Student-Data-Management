@@ -14,6 +14,7 @@ import com.example.GraduationThesis.Service.DataBase.InterfaceService.User.RoleS
 import com.example.GraduationThesis.Service.DataBase.InterfaceService.User.UserService;
 import com.example.GraduationThesis.Service.LazySingleton.Password.PasswordManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,13 +22,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service("AuthenticationImplementation")
+@Validated
 public class AuthenticationImplementation implements AuthenticationServiceAPI {
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -41,7 +46,12 @@ public class AuthenticationImplementation implements AuthenticationServiceAPI {
     private RoleService roleService;
 
     @Override
-    public ResponseEntity<String> signUp(SignupRequest signupRequest) {
+    public ResponseEntity<String> signUp( SignupRequest signupRequest) {
+//
+//        if (signupRequest.getEmail() == null) {
+//            signupRequest.setEmail(""); // hoặc có thể sử dụng một giá trị mặc định khác
+//        }
+
         if (userService.existsByUsername(signupRequest.getUserName())) {
             return ResponseEntity.badRequest().body("Name is duplicated");
         }
@@ -72,7 +82,6 @@ public class AuthenticationImplementation implements AuthenticationServiceAPI {
         userService.save(user);
         return ResponseEntity.ok(new String("User signed up successfully!"));
     }
-
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
 
@@ -108,6 +117,19 @@ public class AuthenticationImplementation implements AuthenticationServiceAPI {
                 customUserDetails.getUser().getNumberPhone(),
                 customUserDetails.getUsername(),
                 listRoles.toString());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Map<String, String> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        return errors;
     }
 }
 
