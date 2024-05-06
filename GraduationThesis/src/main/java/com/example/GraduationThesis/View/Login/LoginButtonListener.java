@@ -69,10 +69,13 @@ public class LoginButtonListener implements ActionListener {
             Gson gson = new Gson();
             JsonObject jsonObject = gson.fromJson(response.body(), JsonObject.class);
 
-            if (jsonObject == null) {
-                JOptionPane.showMessageDialog(jFrame, "wrong name or password");
+            System.out.println(jsonObject.get("accessToken"));
+            if (jsonObject.get("accessToken").isJsonNull()) {
+                displayErrorMessages(jsonObject);
                 return;
             }
+
+
             // get value of accessToken
             String accessToken = jsonObject.get("accessToken").getAsString();
             JsonWebTokenManager.getInstance().setJwtToken(accessToken);
@@ -101,10 +104,21 @@ public class LoginButtonListener implements ActionListener {
             }
 
 
-        } catch (IOException | InterruptedException exception) {
+        } catch (Exception exception) {
             JOptionPane.showMessageDialog(jFrame, "Error occurred: " + exception.getMessage());
         }
         jFrame.dispose();
         new MenuFrame();
+    }
+
+    private void displayErrorMessages(JsonObject responseBody) {
+        StringBuilder errorMessage = new StringBuilder();
+
+        // Check and append error messages for the "userName" field
+        if (responseBody.has("status")) {
+            errorMessage.append("status: ").append(responseBody.get("status").getAsString()).append("\n");
+            // Display error message and return if error found for "status" field
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+        }
     }
 }

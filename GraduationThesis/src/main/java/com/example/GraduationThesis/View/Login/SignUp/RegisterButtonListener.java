@@ -2,6 +2,8 @@ package com.example.GraduationThesis.View.Login.SignUp;
 
 import com.example.GraduationThesis.View.Login.LoginFrame;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -80,10 +82,44 @@ public class RegisterButtonListener implements ActionListener {
                 jFrame.dispose();
                 new LoginFrame();
             } else {
-                JOptionPane.showMessageDialog(jFrame, response.body());
+                JsonObject responseBody = JsonParser.parseString(response.body()).getAsJsonObject();
+                displayErrorMessages(responseBody);
             }
         } catch (IOException | InterruptedException exception) {
             JOptionPane.showMessageDialog(jFrame, "Error occurred: " + exception.getMessage());
+        }
+    }
+
+    private void displayErrorMessages(JsonObject responseBody) {
+        StringBuilder errorMessage = new StringBuilder();
+
+        // Check and append error messages for the "userName" field
+        if (responseBody.has("userName")) {
+            errorMessage.append("User Name: ").append(responseBody.get("userName").getAsString()).append("\n");
+            // Display error message and return if error found for "userName" field
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+            return;
+        }
+
+        // Check and append error messages for the "password" field
+        if (responseBody.has("password")) {
+            errorMessage.append("Password: ").append(responseBody.get("password").getAsString()).append("\n");
+            // Display error message and return if error found for "password" field
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+            return;
+        }
+        if (responseBody.has("numberPhone")) {
+            errorMessage.append("Number Phone: ").append(responseBody.get("numberPhone").getAsString()).append("\n");
+            // Display error message and return if error found for "numberPhone" field
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+            return;
+        }
+
+        // Check and append error messages for the "email" field
+        if (responseBody.has("email")) {
+            errorMessage.append("Email: ").append(responseBody.get("email").getAsString()).append("\n");
+            // Display error message and return if error found for "email" field
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
         }
     }
 }

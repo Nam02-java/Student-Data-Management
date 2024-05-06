@@ -46,11 +46,11 @@ public class WebSecurityConfig {
                             requestMatchers("/api/v1/public/auth/signup").permitAll().
                             anyRequest()).authenticated();
                 });
-
-
         http.addFilterBefore(jsonWebTokenAuthenticationFiler(), UsernamePasswordAuthenticationFilter.class);
         return (SecurityFilterChain) http.build();
     }
+
+
 
     @Bean
     public AuthenticationProvider authenticationProvider() {

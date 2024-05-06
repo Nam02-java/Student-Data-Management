@@ -7,7 +7,6 @@ import java.awt.event.ActionListener;
 public class SignUpButtonListener extends JFrame implements ActionListener {
     private JTextField usernameField;
     private JPasswordField passwordField;
-
     private JTextField numberphoneField;
     private JTextField emailField;
     private JFrame jFrame;

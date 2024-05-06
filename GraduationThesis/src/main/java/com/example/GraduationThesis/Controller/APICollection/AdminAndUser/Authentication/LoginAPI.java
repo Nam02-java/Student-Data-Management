@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/public/auth")
@@ -18,7 +17,7 @@ public class LoginAPI {
     private AuthenticationServiceAPI authenticationServiceAPI;
 
     @PostMapping("/login")
-    public LoginResponse login(@Valid @RequestBody LoginRequest loginRequest) {
+    public LoginResponse login(@RequestBody LoginRequest loginRequest) {
         return authenticationServiceAPI.login(loginRequest);
     }
 }
