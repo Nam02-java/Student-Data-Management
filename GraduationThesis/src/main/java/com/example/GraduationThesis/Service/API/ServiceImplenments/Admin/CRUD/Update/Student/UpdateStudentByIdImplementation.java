@@ -17,6 +17,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -112,7 +115,7 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
             score.setScore1Hour(scoreValues.get(1));
             score.setScoreMidTerm(scoreValues.get(2));
             score.setScoreFinalExam(scoreValues.get(3));
-          //  score.setScoreOverall(scoreValues.get(4));
+            //  score.setScoreOverall(scoreValues.get(4));
 
             double overallScore = scoreValues.stream()
                     .filter(s -> !s.isEmpty()) // Lọc ra các ô không trống

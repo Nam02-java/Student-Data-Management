@@ -5,6 +5,7 @@ import com.example.GraduationThesis.View.Login.MenuFrame.MenuFrame;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -177,10 +178,83 @@ public class SubmitButtonListener implements ActionListener {
                 jFrame.dispose();
                 menuFrame.setVisible(true);
             } else {
-                JOptionPane.showMessageDialog(jFrame, response.body());
+                JsonObject responseBody = JsonParser.parseString(response.body()).getAsJsonObject();
+                displayErrorMessages(responseBody);
             }
         } catch (IOException | InterruptedException exception) {
             JOptionPane.showMessageDialog(jFrame, "Error occurred: " + exception.getMessage());
+        }
+    }
+
+
+    private void displayErrorMessages(JsonObject responseBody) {
+        StringBuilder errorMessage = new StringBuilder();
+
+        // Check and append error messages for the "username" field
+        if (responseBody.has("username")) {
+            errorMessage.append("username: ").append(responseBody.get("username").getAsString()).append("\n");
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+            return;
+        }
+
+        // Check and append error messages for the "classname" field
+        if (responseBody.has("classname")) {
+            errorMessage.append("classname: ").append(responseBody.get("classname").getAsString()).append("\n");
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+            return;
+        }
+        if (responseBody.has("email")) {
+            errorMessage.append("email: ").append(responseBody.get("email").getAsString()).append("\n");
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+            return;
+        }
+
+        // Check and append error messages for the "dateOfBirth" field
+        if (responseBody.has("dateOfBirth")) {
+            errorMessage.append("dateOfBirth: ").append(responseBody.get("dateOfBirth").getAsString()).append("\n");
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+            return;
+        }
+
+        // Check and append error messages for the "numberphone" field
+        if (responseBody.has("numberphone")) {
+            errorMessage.append("numberphone: ").append(responseBody.get("numberphone").getAsString()).append("\n");
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+            return;
+        }
+
+        // Check and append error messages for the "address" field
+        if (responseBody.has("address")) {
+            errorMessage.append("address: ").append(responseBody.get("address").getAsString()).append("\n");
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+            return;
+        }
+
+        // Check and append error messages for the "position" field
+        if (responseBody.has("position")) {
+            errorMessage.append("position: ").append(responseBody.get("position").getAsString()).append("\n");
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+            return;
+        }
+
+        // Check and append error messages for the "teachername" field
+        if (responseBody.has("teachername")) {
+            errorMessage.append("teachername: ").append(responseBody.get("teachername").getAsString()).append("\n");
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+            return;
+        }
+
+        // Check and append error messages for the "partentsname" field
+        if (responseBody.has("partentsname")) {
+            errorMessage.append("partentsname: ").append(responseBody.get("partentsname").getAsString()).append("\n");
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+            return;
+        }
+
+        // Check and append error messages for the "partensnumberphone" field
+        if (responseBody.has("partensnumberphone")) {
+            errorMessage.append("partensnumberphone: ").append(responseBody.get("partensnumberphone").getAsString()).append("\n");
+            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
         }
     }
 }
