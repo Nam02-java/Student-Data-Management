@@ -6,7 +6,6 @@ import com.example.GraduationThesis.Service.LazySingleton.ListRoles.ListRolesMan
 import com.example.GraduationThesis.Service.LazySingleton.NumberPhone.NumberPhoneManager;
 import com.example.GraduationThesis.Service.LazySingleton.UserName.UserNameManager;
 import com.example.GraduationThesis.View.Login.MenuFrame.MenuFrame;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 

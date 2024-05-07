@@ -12,9 +12,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service("UserUpdateImplementation")
 public class UserUpdateImplementation implements UserServiceUpdateAPI {
@@ -25,12 +26,8 @@ public class UserUpdateImplementation implements UserServiceUpdateAPI {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public ResponseEntity<?> userUpdate(@RequestBody UpdateUserRequest updateUserRequest) {
+    public ResponseEntity<?> userUpdate(UpdateUserRequest updateUserRequest) {
 
-        /**
-         * get numberphone from current user (ROLE_USER && ROLE_ADMIN) in this session
-         * jwt + userdetails + authentication
-         */
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String currentUserPhoneNumber = userDetails.getUser().getNumberPhone();
@@ -38,9 +35,8 @@ public class UserUpdateImplementation implements UserServiceUpdateAPI {
         Users user = userService.findBynumberPhone(currentUserPhoneNumber);
 
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("your numberphone not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Your numberphone not found");
         }
-
 
         Map<String, String> updates = updateUserRequest.getUpdates();
         if (updates != null) {
@@ -48,14 +44,10 @@ public class UserUpdateImplementation implements UserServiceUpdateAPI {
                 String key = entry.getKey();
                 String value = entry.getValue();
 
-                if ("username".equals(key)) {
-                    Users existingUser = userService.findByUsername(value);
-                    if (existingUser != null && !existingUser.getId().equals(user.getId())) {
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username already exists");
-                    }
-                }
-
                 if ("email".equals(key)) {
+                    if (!isValidEmail(value)) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid email format");
+                    }
                     Users existingUser = userService.findByEmail(value);
                     if (existingUser != null && !existingUser.getId().equals(user.getId())) {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email already exists");
@@ -63,9 +55,28 @@ public class UserUpdateImplementation implements UserServiceUpdateAPI {
                 }
 
                 if ("numberphone".equals(key)) {
+                    if (!isValidPhoneNumber(value)) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid phone number format");
+                    }
                     Users existingUser = userService.findBynumberPhone(value);
                     if (existingUser != null && !existingUser.getId().equals(user.getId())) {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Numberphone already exists");
+                    }
+                }
+
+                if ("username".equals(key)) {
+                    if (value.length() < 6 || value.length() > 30) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username must have 6 to 30 characters");
+                    }
+                    Users existingUser = userService.findByUsername(value);
+                    if (existingUser != null && !existingUser.getId().equals(user.getId())) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username already exists");
+                    }
+                }
+
+                if ("password".equals(key)) {
+                    if (value.length() < 8) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password must have at least 8 characters");
                     }
                 }
             }
@@ -75,7 +86,7 @@ public class UserUpdateImplementation implements UserServiceUpdateAPI {
 
         userService.save(user);
 
-        return ResponseEntity.ok("update data successfully");
+        return ResponseEntity.ok("Update data successfully");
     }
 
     private void updateUserInformation(Users user, Map<String, String> updates) {
@@ -98,5 +109,16 @@ public class UserUpdateImplementation implements UserServiceUpdateAPI {
             });
         }
     }
-}
 
+    private boolean isValidEmail(String email) {
+        String regex = "^[\\w.-]+@gmail\\.com$";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(email);
+        return matcher.matches();
+    }
+
+
+    private boolean isValidPhoneNumber(String phoneNumber) {
+        return phoneNumber != null && phoneNumber.matches("\\d{10,11}");
+    }
+}

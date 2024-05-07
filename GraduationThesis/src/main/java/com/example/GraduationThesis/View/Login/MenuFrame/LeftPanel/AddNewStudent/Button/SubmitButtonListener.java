@@ -2,10 +2,7 @@ package com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.AddNewStuden
 
 import com.example.GraduationThesis.Service.LazySingleton.JsonWebToken.JsonWebTokenManager;
 import com.example.GraduationThesis.View.Login.MenuFrame.MenuFrame;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -16,6 +13,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.List;
 
 public class SubmitButtonListener implements ActionListener {
     private JTextField usernameField;
@@ -33,10 +31,10 @@ public class SubmitButtonListener implements ActionListener {
     private JTextField conduct2018_2019TextField;
     private JTextField conduct2019_2020TextField;
     private JTextField attendanceScoreTextField;
-
     private JFrame jFrame;
     private MenuFrame menuFrame;
-    String[] subjects = {"Literature", "Math", "English", "History", "Geography", "Physics", "Chemistry", "Biology", "Citizen_Education", "National_Defense_And_Security_Education", "Technology", "Information_Technology", "Physical_Education"};
+    private String[] subjects = {"Literature", "Math", "English", "History", "Geography", "Physics", "Chemistry", "Biology", "Citizen_Education", "National_Defense_And_Security_Education", "Technology", "Information_Technology", "Physical_Education"};
+    private final List<String> fieldsToCheck = new ArrayList<>();
 
     public SubmitButtonListener(MenuFrame menuFrame, JFrame jFrame, JTextField usernameField, JTextField classnameField, JTextField emailField, JTextField dateOfBirthField, JTextField numberphoneField, JTextField addressField, JTextField positionField, JTextField teachernameField, JTextField partentsnameField, JTextField partensnumberphoneField, ArrayList<JTextField[]> scoreFields, JTextField conduct2017_2018TextField, JTextField conduct2018_2019TextField, JTextField conduct2019_2020TextField, JTextField attendanceScoreTextField) {
         this.menuFrame = menuFrame;
@@ -67,6 +65,7 @@ public class SubmitButtonListener implements ActionListener {
 
 
     public void callAPI() {
+
         // Get data from JTextField fields
         String username = usernameField.getText();
         String classname = classnameField.getText();
@@ -78,7 +77,6 @@ public class SubmitButtonListener implements ActionListener {
         String teachername = teachernameField.getText();
         String partentsname = partentsnameField.getText();
         String partensnumberphone = partensnumberphoneField.getText();
-
 
         // Create a Json Object to represent the data
         JsonObject requestBody = new JsonObject();
@@ -93,7 +91,6 @@ public class SubmitButtonListener implements ActionListener {
         requestBody.addProperty("partentsname", partentsname);
         requestBody.addProperty("partensnumberphone", partensnumberphone);
 
-
         // Create a Json Object to represent the Payload score
         JsonObject scorePayload = new JsonObject();
         JsonArray scoresArray = new JsonArray();
@@ -102,7 +99,6 @@ public class SubmitButtonListener implements ActionListener {
         for (int i = 0; i < scoreFields.size(); i++) {
             String subject = subjects[i];
             JTextField[] fields = scoreFields.get(i);
-
 
             String fifteenMinutes = fields[0].getText();
             String oneHour = fields[1].getText();
@@ -132,7 +128,6 @@ public class SubmitButtonListener implements ActionListener {
         }
         scorePayload.add("scores", scoresArray);
 
-
         // Create a JsonObject object to represent conductPay
         JsonObject conductPayload = new JsonObject();
         JsonArray conductsArray = new JsonArray();
@@ -154,7 +149,6 @@ public class SubmitButtonListener implements ActionListener {
 
         requestBody.add("scorePayload", scorePayload);
         requestBody.add("conductPayload", conductPayload);
-
 
         // Convert the request Body object to a JSON string
         String jsonBody = new Gson().toJson(requestBody);
@@ -178,83 +172,56 @@ public class SubmitButtonListener implements ActionListener {
                 jFrame.dispose();
                 menuFrame.setVisible(true);
             } else {
-                JsonObject responseBody = JsonParser.parseString(response.body()).getAsJsonObject();
-                displayErrorMessages(responseBody);
+                // Check if string is JSON or not
+                boolean isJson = isJSONValid(response.body());
+                if (isJson) {
+                    JsonObject responseBody = JsonParser.parseString(response.body()).getAsJsonObject();
+                    displayErrorMessages(responseBody);
+                } else {
+                    JOptionPane.showMessageDialog(jFrame, response.body().toString());
+                }
             }
         } catch (IOException | InterruptedException exception) {
             JOptionPane.showMessageDialog(jFrame, "Error occurred: " + exception.getMessage());
         }
     }
 
-
     private void displayErrorMessages(JsonObject responseBody) {
+
+        // Add the keys to check to the fieldsToCheck list
+        fieldsToCheck.clear();
+        fieldsToCheck.add("username");
+        fieldsToCheck.add("classname");
+        fieldsToCheck.add("email");
+        fieldsToCheck.add("dateOfBirth");
+        fieldsToCheck.add("numberphone");
+        fieldsToCheck.add("address");
+        fieldsToCheck.add("position");
+        fieldsToCheck.add("teachername");
+        fieldsToCheck.add("partentsname");
+        fieldsToCheck.add("partensnumberphone");
+
         StringBuilder errorMessage = new StringBuilder();
 
-        // Check and append error messages for the "username" field
-        if (responseBody.has("username")) {
-            errorMessage.append("username: ").append(responseBody.get("username").getAsString()).append("\n");
-            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
-            return;
+        // Checks and displays error messages for the current field
+        for (String field : fieldsToCheck) {
+            if (responseBody.has(field)) {
+                String fieldValue = responseBody.get(field).getAsString();
+                // if (fieldValue.contains("is not empty or null") || fieldValue.contains("Number phone") || fieldValue.contains("Student name must have 2 to 50 characters")) {
+                errorMessage.append(fieldValue);
+                JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+                return; // Stop the loop after displaying the first error message
+            }
         }
+    }
 
-        // Check and append error messages for the "classname" field
-        if (responseBody.has("classname")) {
-            errorMessage.append("classname: ").append(responseBody.get("classname").getAsString()).append("\n");
-            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
-            return;
-        }
-        if (responseBody.has("email")) {
-            errorMessage.append("email: ").append(responseBody.get("email").getAsString()).append("\n");
-            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
-            return;
-        }
-
-        // Check and append error messages for the "dateOfBirth" field
-        if (responseBody.has("dateOfBirth")) {
-            errorMessage.append("dateOfBirth: ").append(responseBody.get("dateOfBirth").getAsString()).append("\n");
-            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
-            return;
-        }
-
-        // Check and append error messages for the "numberphone" field
-        if (responseBody.has("numberphone")) {
-            errorMessage.append("numberphone: ").append(responseBody.get("numberphone").getAsString()).append("\n");
-            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
-            return;
-        }
-
-        // Check and append error messages for the "address" field
-        if (responseBody.has("address")) {
-            errorMessage.append("address: ").append(responseBody.get("address").getAsString()).append("\n");
-            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
-            return;
-        }
-
-        // Check and append error messages for the "position" field
-        if (responseBody.has("position")) {
-            errorMessage.append("position: ").append(responseBody.get("position").getAsString()).append("\n");
-            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
-            return;
-        }
-
-        // Check and append error messages for the "teachername" field
-        if (responseBody.has("teachername")) {
-            errorMessage.append("teachername: ").append(responseBody.get("teachername").getAsString()).append("\n");
-            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
-            return;
-        }
-
-        // Check and append error messages for the "partentsname" field
-        if (responseBody.has("partentsname")) {
-            errorMessage.append("partentsname: ").append(responseBody.get("partentsname").getAsString()).append("\n");
-            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
-            return;
-        }
-
-        // Check and append error messages for the "partensnumberphone" field
-        if (responseBody.has("partensnumberphone")) {
-            errorMessage.append("partensnumberphone: ").append(responseBody.get("partensnumberphone").getAsString()).append("\n");
-            JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
+    // Method to check if string is JSON or not
+    public static boolean isJSONValid(String jsonInString) {
+        try {
+            JsonParser.parseString(jsonInString);
+            return true;
+        } catch (JsonSyntaxException ex) {
+            return false;
         }
     }
 }

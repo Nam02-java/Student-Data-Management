@@ -126,7 +126,6 @@ public class StudentInfoForm extends JFrame {
         mainPanel.add(submitButton);
 
 
-        // Thêm main panel vào frame
         add(mainPanel);
 
         setTitle("Student Information Form");

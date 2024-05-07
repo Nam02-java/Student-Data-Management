@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 import static com.example.GraduationThesis.Service.Utils.Status.*;
 
 @Service("AuthenticationImplementation")
-@Validated
 public class AuthenticationImplementation implements AuthenticationServiceAPI {
     @Autowired
     private AuthenticationManager authenticationManager;
