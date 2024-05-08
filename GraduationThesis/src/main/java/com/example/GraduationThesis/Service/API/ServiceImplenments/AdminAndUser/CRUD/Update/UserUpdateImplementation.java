@@ -5,6 +5,7 @@ import com.example.GraduationThesis.Model.Enitity.Users.Users;
 import com.example.GraduationThesis.Model.PayLoad.User.UpdateUser.UpdateUserRequest;
 import com.example.GraduationThesis.Service.API.InterfaceService.AdminAndUser.CRUD.Update.UserServiceUpdateAPI;
 import com.example.GraduationThesis.Service.DataBase.InterfaceService.User.UserService;
+import com.example.GraduationThesis.Service.Utils.CheckValid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,9 @@ public class UserUpdateImplementation implements UserServiceUpdateAPI {
     private UserService userService;
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private CheckValid checkValid;
 
     @Override
     public ResponseEntity<?> userUpdate(UpdateUserRequest updateUserRequest) {
@@ -45,21 +49,21 @@ public class UserUpdateImplementation implements UserServiceUpdateAPI {
                 String value = entry.getValue();
 
                 if ("email".equals(key)) {
-                    if (!isValidEmail(value)) {
+                    if (!checkValid.isValidEmail(value)) {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid email format");
                     }
-                    Users existingUser = userService.findByEmail(value);
-                    if (existingUser != null && !existingUser.getId().equals(user.getId())) {
+                    Users existingEmail = userService.findByEmail(value);
+                    if (existingEmail != null && !existingEmail.getId().equals(user.getId())) {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email already exists");
                     }
                 }
 
                 if ("numberphone".equals(key)) {
-                    if (!isValidPhoneNumber(value)) {
+                    if (!checkValid.isValidPhoneNumber(value)) {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid phone number format");
                     }
-                    Users existingUser = userService.findBynumberPhone(value);
-                    if (existingUser != null && !existingUser.getId().equals(user.getId())) {
+                    Users existingNumberphone = userService.findBynumberPhone(value);
+                    if (existingNumberphone != null && !existingNumberphone.getId().equals(user.getId())) {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Numberphone already exists");
                     }
                 }
@@ -108,17 +112,5 @@ public class UserUpdateImplementation implements UserServiceUpdateAPI {
                 }
             });
         }
-    }
-
-    private boolean isValidEmail(String email) {
-        String regex = "^[\\w.-]+@gmail\\.com$";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(email);
-        return matcher.matches();
-    }
-
-
-    private boolean isValidPhoneNumber(String phoneNumber) {
-        return phoneNumber != null && phoneNumber.matches("\\d{10,11}");
     }
 }

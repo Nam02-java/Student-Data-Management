@@ -19,7 +19,7 @@ public class SaveTabConduct {
         for (int i = 0; i < model.getRowCount(); i++) {
             String payload = buildPayload(model, i);
             if (payload != null) {
-                sendHttpRequest(payload);
+                sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
             } else {
                 System.out.println("Failed to build payload for row " + (i + 1));
             }

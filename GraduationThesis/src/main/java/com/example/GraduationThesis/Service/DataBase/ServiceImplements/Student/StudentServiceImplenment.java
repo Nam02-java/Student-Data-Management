@@ -1,6 +1,7 @@
 package com.example.GraduationThesis.Service.DataBase.ServiceImplements.Student;
 
 import com.example.GraduationThesis.Model.Enitity.Student.Student;
+import com.example.GraduationThesis.Model.Enitity.Users.Users;
 import com.example.GraduationThesis.Model.Repository.StudentRepository.StudentRepository;
 import com.example.GraduationThesis.Service.DataBase.InterfaceService.Student.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,8 +43,17 @@ public class StudentServiceImplenment implements StudentService {
     }
 
     @Override
+    public Student findByEmail(String email) {
+        return studentRepository.findByEmail(email);
+    }
+    @Override
     public boolean existsByNumberphone(String numberphone) {
         return studentRepository.existsByNumberphone(numberphone);
+    }
+
+    @Override
+    public Student findBynumberPhone(String numberphone) {
+        return studentRepository.findBynumberphone(numberphone);
     }
 
     @Override

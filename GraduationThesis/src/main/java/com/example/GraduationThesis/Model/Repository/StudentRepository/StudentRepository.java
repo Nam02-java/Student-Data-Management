@@ -1,6 +1,7 @@
 package com.example.GraduationThesis.Model.Repository.StudentRepository;
 
 import com.example.GraduationThesis.Model.Enitity.Student.Student;
+import com.example.GraduationThesis.Model.Enitity.Users.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,7 +16,12 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     boolean existsByEmail(String email);
 
+    Student findByEmail(String email);
+
     boolean existsByNumberphone(String numberphone);
+
+    Student findBynumberphone(String numberphone);
+
 
     Student findStudentById(Long id);
 

@@ -86,7 +86,7 @@ public class LeftPanel extends JPanel {
         logoutButton.addActionListener(new LogoutListener(menuFrame));
         myProfileButton.addActionListener(new MyProfileListener(menuFrame));
         addStudentButton.addActionListener(new AddNewStudentListener(menuFrame));
-        saveButton.addActionListener(new SaveEditButtonListener(tabbedPane, tabGeneralInformation.getTable(), tabPosition.getTable(), tabScores.getTable(), tabConduct.getTable(), tabPersonalInformation.getTable()));
+        saveButton.addActionListener(new SaveEditButtonListener(tabbedPane, tabGeneralInformation.getTable(), tabPosition.getTable(), tabScores.getTable(), tabConduct.getTable(), tabPersonalInformation.getTable(), menuFrame));
     }
 
 

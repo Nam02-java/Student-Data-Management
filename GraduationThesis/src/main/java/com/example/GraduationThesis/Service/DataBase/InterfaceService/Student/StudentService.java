@@ -17,7 +17,13 @@ public interface StudentService {
 
     boolean existsByEmail(String email);
 
+
+    Student findByEmail(String email);
+
+
     boolean existsByNumberphone(String numberphone);
+
+    Student findBynumberPhone(String numberphone);
 
     Student findStudentById(Long id);
 

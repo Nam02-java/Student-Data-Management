@@ -11,17 +11,17 @@ import com.example.GraduationThesis.Model.PayLoad.Student.UpdateStudent.UpdateSt
 import com.example.GraduationThesis.Service.API.InterfaceService.Admin.CRUD.Update.AdminServiceUpdateAPI;
 import com.example.GraduationThesis.Service.DataBase.InterfaceService.Student.StudentService;
 import com.example.GraduationThesis.Service.DataBase.InterfaceService.Student.SubjectService;
+import com.example.GraduationThesis.Service.Utils.CheckValid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service("UpdateStudentByIdImplementation")
 public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
@@ -32,6 +32,8 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
     @Autowired
     private SubjectService subjectService;
 
+    @Autowired
+    private CheckValid checkValid;
 
     @Override
     public ResponseEntity<?> updateStudentByID(@RequestBody UpdateStudentRequest updateStudentRequest) {
@@ -39,6 +41,92 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
         Student student = studentService.findStudentById(studentID);
         if (student == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student ID not found");
+        }
+
+        Map<String, String> updates = updateStudentRequest.getUpdates();
+        if (updates != null) {
+            for (Map.Entry<String, String> entry : updates.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+
+                if ("username".equals(key)) {
+                    if (value == null || value.trim().isEmpty() || value.length() < 2 || value.length() > 50) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User name must have 2 to 50 characters");
+                    }
+                }
+
+                if ("classname".equals(key)) {
+                    if (value == null || value.trim().isEmpty()) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Class name is empty");
+                    }
+                }
+
+                if ("email".equals(key)) {
+                    if (!checkValid.isValidEmail(value)) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid email format");
+                    }
+                    Student existingEmail = studentService.findByEmail(value);
+                    if (existingEmail != null && !existingEmail.getId().equals(student.getId())) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email already exists");
+                    }
+                }
+
+                if ("dateOfBirth".equals(key)) {
+                    if (value == null || value.trim().isEmpty()) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("date of birth is empty");
+                    }
+                }
+
+                if ("numberphone".equals(key)) {
+                    if (!checkValid.isValidPhoneNumber(value)) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid student's phone number format");
+                    }
+                    Student existingNumberphone = studentService.findBynumberPhone(value);
+                    if (existingNumberphone != null && !existingNumberphone.getId().equals(student.getId())) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Numberphone of student already exists");
+                    }
+                }
+
+                if ("address".equals(key)) {
+                    if (value == null || value.trim().isEmpty()) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("address is empty");
+                    }
+                }
+
+                if ("address".equals(key)) {
+                    if (value == null || value.trim().isEmpty()) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("address is empty");
+                    }
+                }
+
+                if ("position".equals(key)) {
+                    if (value == null || value.trim().isEmpty()) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("position is empty");
+                    }
+                }
+
+                if ("teachername".equals(key)) {
+                    if (value == null || value.trim().isEmpty() || value.length() < 2 || value.length() > 50) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Teacher name must have 2 to 50 characters");
+                    }
+                }
+
+                if ("partentsname".equals(key)) {
+                    if (value == null || value.trim().isEmpty() || value.length() < 2 || value.length() > 50) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Partents name must have 2 to 50 characters");
+                    }
+                }
+
+                /**
+                 * No duplicate control
+                 * In real cases, many students with the same parents may be in the same class
+                 */
+                if ("partensnumberphone".equals(key)) {
+                    if (!checkValid.isValidPhoneNumber(value)) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid parent's phone number format");
+                    }
+                }
+            }
         }
 
         updateStudentInformation(student, updateStudentRequest.getUpdates());
@@ -55,6 +143,12 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
     }
 
 
+    /**
+     * information of student
+     *
+     * @param student
+     * @param updates
+     */
     private void updateStudentInformation(Student student, Map<String, String> updates) {
         if (updates != null) {
             updates.forEach((key, value) -> {
@@ -94,6 +188,12 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
         }
     }
 
+    /**
+     * scores of student
+     *
+     * @param student
+     * @param scorePayload
+     */
     private void updateStudentScores(Student student, ScorePayload scorePayload) {
         if (scorePayload != null && scorePayload.getScores() != null) {
             for (ScoreRequest scoreRequest : scorePayload.getScores()) {
@@ -109,6 +209,7 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
         }
     }
 
+
     private void updateScoreValues(Scores score, List<String> scoreValues) {
         if (scoreValues.size() >= 4) {
             score.setScore15Min(scoreValues.get(0));
@@ -118,16 +219,21 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
             //  score.setScoreOverall(scoreValues.get(4));
 
             double overallScore = scoreValues.stream()
-                    .filter(s -> !s.isEmpty()) // Lọc ra các ô không trống
+                    .filter(s -> !s.isEmpty())
                     .mapToInt(Integer::parseInt)
                     .average()
-                    .orElse(0.0); // Giá trị mặc định nếu không có điểm
+                    .orElse(0.0);
 
-            // Lưu điểm tổng kết vào đối tượng Scores
             score.setScoreOverall(String.valueOf(overallScore));
         }
     }
 
+    /**
+     * conduct of student
+     *
+     * @param student
+     * @param conductPayload
+     */
     private void updateStudentConduct(Student student, ConductPayload conductPayload) {
         if (conductPayload != null && conductPayload.getConducts() != null) {
             for (ConductRequest conductRequest : conductPayload.getConducts()) {
