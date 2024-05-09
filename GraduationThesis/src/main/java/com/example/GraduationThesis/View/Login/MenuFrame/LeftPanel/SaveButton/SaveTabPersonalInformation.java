@@ -11,7 +11,6 @@ public class SaveTabPersonalInformation {
         for (int i = 0; i < model.getRowCount(); i++) {
             String payload = buildPayload(model, i);
             if (payload != null) {
-                System.out.println("MY PAYLOAD : " + payload);
                 sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
             } else {
                 System.out.println("Failed to build payload for row " + (i + 1));

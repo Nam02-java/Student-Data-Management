@@ -5,17 +5,17 @@ import com.example.GraduationThesis.Model.Enitity.Student.Student;
 import com.example.GraduationThesis.Model.Enitity.Student.Subject.Scores;
 import com.example.GraduationThesis.Model.PayLoad.Student.SignUpStudent.Conduct.ConductPayload;
 import com.example.GraduationThesis.Model.PayLoad.Student.SignUpStudent.Scores.ScorePayload;
+import com.example.GraduationThesis.Model.PayLoad.Student.SignUpStudent.Scores.ScoreRequest;
 import com.example.GraduationThesis.Model.PayLoad.Student.SignUpStudent.StudenRequest;
 import com.example.GraduationThesis.Service.API.InterfaceService.Admin.CRUD.Create.AdminServiceCreateAPI;
 import com.example.GraduationThesis.Service.DataBase.InterfaceService.Student.StudentService;
 import com.example.GraduationThesis.Service.DataBase.InterfaceService.Student.SubjectService;
+import com.example.GraduationThesis.Service.Utils.CheckValid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestBody;
-
 import java.util.*;
 
 
@@ -28,22 +28,51 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
     @Autowired
     private SubjectService subjectService;
 
+    @Autowired
+    private CheckValid checkValid;
+
     @Override
     public ResponseEntity<?> registerStudent(@RequestBody StudenRequest studenRequest) {
 
         ScorePayload scorePayload = studenRequest.getScorePayload();
         ConductPayload conductPayload = studenRequest.getConductPayload();
 
-        if (isNullOrEmpty(studenRequest.getUsername())) return badRequest("Username");
-        if (isNullOrEmpty(studenRequest.getEmail())) return badRequest("Email");
-        if (isNullOrEmpty(studenRequest.getNumberphone())) return badRequest("Number phone");
-        if (isNullOrEmpty(studenRequest.getDateOfBirth())) return badRequest("Date of birth");
-        if (isNullOrEmpty(studenRequest.getAddress())) return badRequest("Address");
-        if (isNullOrEmpty(studenRequest.getPosition())) return badRequest("Position");
-        if (isNullOrEmpty(studenRequest.getTeachername())) return badRequest("Teacher name");
-        if (isNullOrEmpty(studenRequest.getPartentsname())) return badRequest("Parent's name");
-        if (isNullOrEmpty(studenRequest.getPartensnumberphone())) return badRequest("Parent's number phone");
+        // Check scores before saving to database
+        if (scorePayload != null && scorePayload.getScores() != null) {
+            List<ScoreRequest> scores = scorePayload.getScores();
 
+            for (ScoreRequest scoreRequest : scores) {
+                String subjectName = scoreRequest.getSubjectName();
+                List<String> scoreList = scoreRequest.getScores();
+                for (int i = 0; i < scoreList.size(); i++) {
+                    String score = scoreList.get(i);
+
+                    score = score.replace(" ", "");
+
+                    if (score.isEmpty()) {
+                        // Update score in the list
+                        scoreList.set(i, score);
+                        continue; // Skip empty scores
+                    }
+
+                    // Update score in the list
+                    scoreList.set(i, score);
+
+                    if (!checkValid.isValidInteger(score)) {
+                        if (i == 0) {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score 15 minutes" + " of " + subjectName + " is not valid");
+                        } else if (i == 1) {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score 1 hour" + " of " + subjectName + " is not valid");
+                        } else if (i == 2) {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score mid term" + " of " + subjectName + " is not valid");
+                        } else {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score final exam" + " of " + subjectName + " is not valid");
+                        }
+                    }
+                }
+                scoreRequest.setScores(scoreList); // Update scores in the ScoreRequest
+            }
+        }
 
         if (studentService.existsByUserName(studenRequest.getUsername())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Student name already exists");
@@ -132,11 +161,4 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
         return null;
     }
 
-    private boolean isNullOrEmpty(String str) {
-        return StringUtils.isEmpty(str);
-    }
-
-    private ResponseEntity<String> badRequest(String fieldName) {
-        return ResponseEntity.badRequest().body(fieldName + " cannot be empty");
-    }
 }

@@ -5,4 +5,5 @@ public interface CheckValid {
 
     boolean isValidPhoneNumber(String phoneNumber);
 
+    boolean isValidInteger(String value);
 }

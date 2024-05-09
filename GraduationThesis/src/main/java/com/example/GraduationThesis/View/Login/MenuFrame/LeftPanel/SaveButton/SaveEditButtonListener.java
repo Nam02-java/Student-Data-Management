@@ -1,7 +1,6 @@
 package com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.SaveButton;
 
 import com.example.GraduationThesis.Service.LazySingleton.JsonWebToken.JsonWebTokenManager;
-import com.example.GraduationThesis.View.Login.LoginFrame;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
@@ -32,6 +31,12 @@ public class SaveEditButtonListener implements ActionListener {
 
     public static Boolean flagSaveEditButton = true;
 
+    /**
+     * This variable is created for the purpose of targeting the scores tab
+     * Number 2 will be the index number of the score tab
+     */
+    private static int selectedIndexTabScore = 0;
+
 
     public SaveEditButtonListener(JTabbedPane tabbedPane, JTable tableTabGeneralInformation, JTable tableTabPosition, JTable tableScores, JTable tableConduct, JTable tablePersonalInformation, JFrame jFrame) {
         this.tabbedPane = tabbedPane;
@@ -51,6 +56,8 @@ public class SaveEditButtonListener implements ActionListener {
         } else if (selectedIndex == 1) {
             SaveTabPosition.sendUpdateRequest(tableTabPosition);
         } else if (selectedIndex == 2) {
+            // set number index for selectedIndexTabScore
+            selectedIndexTabScore = 2;
             SaveTabScores.sendUpdateRequest(tableScores);
         } else if (selectedIndex == 3) {
             SaveTabConduct.sendUpdateRequest(tableConduct);
@@ -81,8 +88,13 @@ public class SaveEditButtonListener implements ActionListener {
                 // Check if string is JSON or not
                 boolean isJson = isJSONValid(response.body());
                 if (isJson) {
-                    JsonObject responseBody = JsonParser.parseString(response.body()).getAsJsonObject();
-                    displayErrorMessages(responseBody, studentID);
+                    if (selectedIndexTabScore == 2) {
+                        JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body().toString());
+                    } else {
+                        JsonObject responseBody = JsonParser.parseString(response.body()).getAsJsonObject();
+                        displayErrorMessages(responseBody, studentID);
+                    }
+
                 } else {
                     JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body().toString());
                 }

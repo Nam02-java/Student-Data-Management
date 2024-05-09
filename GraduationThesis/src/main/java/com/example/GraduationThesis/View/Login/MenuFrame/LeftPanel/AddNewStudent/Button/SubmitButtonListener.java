@@ -3,7 +3,6 @@ package com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.AddNewStuden
 import com.example.GraduationThesis.Service.LazySingleton.JsonWebToken.JsonWebTokenManager;
 import com.example.GraduationThesis.View.Login.MenuFrame.MenuFrame;
 import com.google.gson.*;
-
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -179,6 +178,7 @@ public class SubmitButtonListener implements ActionListener {
                     displayErrorMessages(responseBody);
                 } else {
                     JOptionPane.showMessageDialog(jFrame, response.body().toString());
+
                 }
             }
         } catch (IOException | InterruptedException exception) {

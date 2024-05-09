@@ -50,5 +50,6 @@ public class StudenRequest {
     private String partensnumberphone;
 
     private ScorePayload scorePayload;
+
     private ConductPayload conductPayload;
 }

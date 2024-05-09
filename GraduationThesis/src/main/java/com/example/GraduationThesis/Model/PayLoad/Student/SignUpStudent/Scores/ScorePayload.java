@@ -6,5 +6,6 @@ import java.util.List;
 
 @Data
 public class ScorePayload {
+
     private List<ScoreRequest> scores;
 }

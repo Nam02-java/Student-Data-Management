@@ -20,8 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service("UpdateStudentByIdImplementation")
 public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
@@ -126,6 +125,44 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid parent's phone number format");
                     }
                 }
+            }
+        }
+
+        // Check scores before saving to database
+        ScorePayload scorePayload = updateStudentRequest.getScorePayload();
+        if (scorePayload != null && scorePayload.getScores() != null) {
+            List<ScoreRequest> scores = scorePayload.getScores();
+
+            for (ScoreRequest scoreRequest : scores) {
+                String subjectName = scoreRequest.getSubjectName();
+                List<String> scoreList = scoreRequest.getScores();
+                for (int i = 0; i < scoreList.size(); i++) {
+                    String score = scoreList.get(i);
+
+                    score = score.replace(" ", "");
+
+                    if (score.isEmpty()) {
+                        // Update score in the list
+                        scoreList.set(i, score);
+                        continue; // Skip empty scores
+                    }
+
+                    // Update score in the list
+                    scoreList.set(i, score);
+
+                    if (!checkValid.isValidInteger(score)) {
+                        if (i == 0) {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score 15 minutes" + " of " + subjectName + " is not valid");
+                        } else if (i == 1) {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score 1 hour" + " of " + subjectName + " is not valid");
+                        } else if (i == 2) {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score mid term" + " of " + subjectName + " is not valid");
+                        } else {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score final exam" + " of " + subjectName + " is not valid");
+                        }
+                    }
+                }
+                scoreRequest.setScores(scoreList); // Update scores in the ScoreRequest
             }
         }
 
