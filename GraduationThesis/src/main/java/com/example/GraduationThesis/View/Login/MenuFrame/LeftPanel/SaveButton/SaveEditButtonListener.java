@@ -1,6 +1,8 @@
 package com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.SaveButton;
 
 import com.example.GraduationThesis.Service.LazySingleton.JsonWebToken.JsonWebTokenManager;
+import com.fasterxml.jackson.databind.util.JSONPObject;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
@@ -81,19 +83,20 @@ public class SaveEditButtonListener implements ActionListener {
             System.out.println("Response from server: " + response.body());
 
             if (response.statusCode() == 200) {
-                // Display successful update notification for each student
-                JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body());
+                if (selectedIndexTabScore == 2) {
+
+                } else {
+                    // Display successful update notification for each student
+                    JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body());
+                }
             } else {
                 flagSaveEditButton = false;
                 // Check if string is JSON or not
                 boolean isJson = isJSONValid(response.body());
                 if (isJson) {
-                    if (selectedIndexTabScore == 2) {
-                        JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body().toString());
-                    } else {
-                        JsonObject responseBody = JsonParser.parseString(response.body()).getAsJsonObject();
-                        displayErrorMessages(responseBody, studentID);
-                    }
+
+                    JsonObject responseBody = JsonParser.parseString(response.body()).getAsJsonObject();
+                    displayErrorMessages(responseBody, studentID);
 
                 } else {
                     JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body().toString());
@@ -144,6 +147,20 @@ public class SaveEditButtonListener implements ActionListener {
         } catch (JsonSyntaxException ex) {
             return false;
         }
+    }
+
+    public static String extractSubjectNameFromPayload(String payload) {
+        int indexStart = payload.indexOf("\"subjectName\":");
+        if (indexStart != -1) {
+            int valueStart = payload.indexOf("\"", indexStart + "\"subjectName\":".length() + 1);
+            if (valueStart != -1) {
+                int valueEnd = payload.indexOf("\"", valueStart + 1);
+                if (valueEnd != -1) {
+                    return payload.substring(valueStart + 1, valueEnd);
+                }
+            }
+        }
+        return null;
     }
 }
 

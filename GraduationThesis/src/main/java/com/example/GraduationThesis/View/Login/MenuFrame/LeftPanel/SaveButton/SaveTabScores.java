@@ -16,6 +16,8 @@ import static com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.SaveBu
 public class SaveTabScores {
     public static void sendUpdateRequest(JTable table) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
+
+
         for (int i = 0; i < model.getRowCount(); i++) {
             String payload = buildPayload(model, i);
             if (payload != null) {
@@ -38,7 +40,8 @@ public class SaveTabScores {
             if (score == "") {
                 scoresList.add("\"\"");
             } else {
-                scoresList.add(score.toString());
+                scoresList.add("\"" + score.toString() + "\""); // Thêm dấu ngoặc kép vào giá trị
+              //  scoresList.add(score.toString());
             }
         }
 
@@ -50,7 +53,8 @@ public class SaveTabScores {
         payloadBuilder.append("\"scores\": [");
         payloadBuilder.append("{");
         payloadBuilder.append("\"subjectName\": \"").append(subjectName).append("\",");
-        payloadBuilder.append("\"scores\": ").append(scoresList);
+        //payloadBuilder.append("\"scores\": ").append(scoresList);
+        payloadBuilder.append("\"scores\": [").append(String.join(",", scoresList)).append("]");
         payloadBuilder.append("}");
         payloadBuilder.append("]");
         payloadBuilder.append("}");
@@ -67,6 +71,15 @@ public class SaveTabScores {
             data.forEach(row -> model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Subject"), row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA"), "Delete"}));
         } else {
             data.forEach(row -> model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Subject"), row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA")}));
+        }
+    }
+
+    private static boolean isValidInteger(String value) {
+        try {
+            Integer.parseInt(value);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 }
