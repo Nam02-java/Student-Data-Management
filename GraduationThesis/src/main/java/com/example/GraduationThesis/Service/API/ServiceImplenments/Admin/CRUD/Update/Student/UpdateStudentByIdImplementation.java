@@ -13,11 +13,13 @@ import com.example.GraduationThesis.Service.DataBase.InterfaceService.Student.St
 import com.example.GraduationThesis.Service.DataBase.InterfaceService.Student.SubjectService;
 import com.example.GraduationThesis.Service.Utils.CheckValid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,6 +40,19 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
     public ResponseEntity<?> updateStudentByID(@RequestBody UpdateStudentRequest updateStudentRequest) {
         Long studentID = updateStudentRequest.getUserId();
         Student student = studentService.findStudentById(studentID);
+
+
+        /**
+         * get all student to check the last student's id
+         */
+        List<Student> allStudents = studentService.getAllStudents();
+        Long lastStudentId = null;
+        if (!allStudents.isEmpty()) {
+            Student lastStudent = allStudents.get(allStudents.size() - 1);
+            lastStudentId = lastStudent.getId();
+        }
+
+
         if (student == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student ID not found");
         }
@@ -171,7 +186,15 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
         updateStudentConduct(student, updateStudentRequest.getConductPayload());
 
         studentService.saveStudent(student);
-        return ResponseEntity.ok("Student updated successfully");
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Student updated successfully");
+        //response.put("lastID", lastStudentId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("LastID", String.valueOf(lastStudentId));
+
+        return ResponseEntity.ok().headers(headers).body(response);
     }
 
     @Override

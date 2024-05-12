@@ -8,22 +8,26 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class SaveEditButtonListener implements ActionListener {
     private static JFrame jFrame;
     private JTabbedPane tabbedPane;
     private JTable tableTabGeneralInformation;
     private JTable tableTabPosition;
-    private JTable tableScores;
+    private static JTable tableScores;
 
     private JTable tableConduct;
 
@@ -38,6 +42,8 @@ public class SaveEditButtonListener implements ActionListener {
      * Number 2 will be the index number of the score tab
      */
     private static int selectedIndexTabScore = 0;
+
+    private static int count = 1;
 
 
     public SaveEditButtonListener(JTabbedPane tabbedPane, JTable tableTabGeneralInformation, JTable tableTabPosition, JTable tableScores, JTable tableConduct, JTable tablePersonalInformation, JFrame jFrame) {
@@ -80,26 +86,57 @@ public class SaveEditButtonListener implements ActionListener {
                 .build();
         try {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
             System.out.println("Response from server: " + response.body());
 
             if (response.statusCode() == 200) {
                 if (selectedIndexTabScore == 2) {
 
+//                    int lastRow = tableScores.getRowCount() - 1;
+//
+//                    count += 1;
+//
+//                    if (count == lastRow) {
+//
+//                        HttpHeaders headers = response.headers();
+//                        String lastID = headers.firstValue("LastID").orElse(null);
+//                        int intValue = Integer.parseInt(lastID);
+//
+//                        if (studentID == intValue) {
+//                            if (response.body().toString().contains("Student updated successfully")) {
+//                                System.out.println("before");
+//                                JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body());
+//                                count = 0;
+//                            }
+//                            System.out.println("next");
+//                            JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body());
+//                            count = 0;
+//                        }
+//                    }
+                    
+
+
                 } else {
                     // Display successful update notification for each student
+                    System.out.println("else");
                     JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body());
                 }
             } else {
+
+                if (selectedIndexTabScore == 2) {
+                    JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + payload);
+                    return;
+                }
+
                 flagSaveEditButton = false;
                 // Check if string is JSON or not
                 boolean isJson = isJSONValid(response.body());
                 if (isJson) {
-
                     JsonObject responseBody = JsonParser.parseString(response.body()).getAsJsonObject();
                     displayErrorMessages(responseBody, studentID);
-
                 } else {
                     JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body().toString());
+
                 }
                 flagSaveEditButton = true;
             }
