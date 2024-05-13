@@ -7,15 +7,51 @@ import static com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.SaveBu
 
 
 public class SaveTabPosition {
+    private static boolean flag;
 
     public static void sendUpdateRequest(JTable table) {
+        flag = true;
         DefaultTableModel model = (DefaultTableModel) table.getModel();
+
         for (int i = 0; i < model.getRowCount(); i++) {
-            String payload = buildPayload(model, i);
-            if (payload != null) {
-                sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
+            if (flag == false) {
+                break;
             } else {
-                System.out.println("Failed to build payload for row " + (i + 1));
+                for (int j = 2; j <= 4; j++) {
+                    String value = model.getValueAt(i, j).toString();
+                    value = value.replace(" ", "");
+
+                    String payload = null;
+
+                    if (j == 2) { // j == 1 at column classname
+                        if (value == null || value.trim().isEmpty()) {
+                            payload = "Class name is empty";
+                            sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
+                            flag = false;
+                            break;
+                        }
+                    } else if (j == 3) { // j == 2 at column position
+                        if (value == null || value.trim().isEmpty()) {
+                            payload = "Position is empty";
+                            sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
+                            flag = false;
+                            break;
+                        }
+                    } else if (j == 4) { // j == 3 at column teachername
+                        if (value == null || value.trim().isEmpty() || value.length() < 2 || value.length() > 50) {
+                            payload = "Teacher name is not valid";
+                            sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
+                            flag = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        if (flag == true) {
+            for (int i = 0; i < model.getRowCount(); i++) {
+                String payload = buildPayload(model, i);
+                sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
             }
         }
     }

@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -20,13 +21,11 @@ import java.util.List;
 public class SaveEditButtonListener implements ActionListener {
     private static JFrame jFrame;
     private JTabbedPane tabbedPane;
-    private JTable tableTabGeneralInformation;
-    private JTable tableTabPosition;
+    private static JTable tableTabGeneralInformation;
+    private static JTable tableTabPosition;
     private static JTable tableScores;
-
-    private JTable tableConduct;
-
-    private JTable tablePersonalInformation;
+    private static JTable tableConduct;
+    private static JTable tablePersonalInformation;
 
     private static List<String> fieldsToCheck = new ArrayList<>();
 
@@ -36,10 +35,9 @@ public class SaveEditButtonListener implements ActionListener {
      * This variable is created for the purpose of targeting the scores tab
      * Number 2 will be the index number of the score tab
      */
-    private static int selectedIndexTabScore = 0;
+    private static int selectedIndex;
 
     private static int count = 1;
-
 
     public SaveEditButtonListener(JTabbedPane tabbedPane, JTable tableTabGeneralInformation, JTable tableTabPosition, JTable tableScores, JTable tableConduct, JTable tablePersonalInformation, JFrame jFrame) {
         this.tabbedPane = tabbedPane;
@@ -53,14 +51,13 @@ public class SaveEditButtonListener implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        int selectedIndex = tabbedPane.getSelectedIndex();
+
+        selectedIndex = tabbedPane.getSelectedIndex();
         if (selectedIndex == 0) {
             SaveTabGeneralInformation.sendUpdateRequest(tableTabGeneralInformation);
         } else if (selectedIndex == 1) {
             SaveTabPosition.sendUpdateRequest(tableTabPosition);
         } else if (selectedIndex == 2) {
-            // set number index for selectedIndexTabScore
-            selectedIndexTabScore = 2;
             SaveTabScores.sendUpdateRequest(tableScores);
         } else if (selectedIndex == 3) {
             SaveTabConduct.sendUpdateRequest(tableConduct);
@@ -69,9 +66,10 @@ public class SaveEditButtonListener implements ActionListener {
         }
     }
 
-
     public static void sendHttpRequest(String payload, int studentID) {
+        System.out.println(payload);
         HttpClient httpClient = HttpClient.newHttpClient();
+
         String url = "http://localhost:8080/api/v1/admin/updateStudentByID";
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -79,56 +77,144 @@ public class SaveEditButtonListener implements ActionListener {
                 .header("Authorization", "Bearer " + JsonWebTokenManager.getInstance().getJwtToken())
                 .PUT(HttpRequest.BodyPublishers.ofString(payload))
                 .build();
+
         try {
+
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-            System.out.println("Response from server: " + response.body());
-
             if (response.statusCode() == 200) {
-                if (selectedIndexTabScore == 2) {
 
-                    int lastRow = tableScores.getRowCount() - 1;
-
+                if (selectedIndex == 0) {
+                    int lastRow = tableTabGeneralInformation.getRowCount();
                     count += 1;
-
                     if (count == lastRow) {
-
-                        HttpHeaders headers = response.headers();
-                        String lastID = headers.firstValue("LastID").orElse(null);
-                        int intValue = Integer.parseInt(lastID);
-
-                        if (studentID == intValue) {
-                            if (response.body().toString().contains("Student updated successfully")) {
-                                JOptionPane.showMessageDialog(jFrame, "Updated all successfully");
-                                count = 0;
-                            }
+                        if (response.body().toString().contains("Student updated successfully")) {
+                            JOptionPane.showMessageDialog(jFrame, "Updated all successfully");
+                            count = 0;
                         }
                     }
-
-
-                } else {
-                    // Display successful update notification for each student
-                    System.out.println("else");
-                    JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body());
+                } else if (selectedIndex == 1) {
+                    int lastRow = tableTabPosition.getRowCount();
+                    count += 1;
+                    if (count == lastRow) {
+                        if (response.body().toString().contains("Student updated successfully")) {
+                            JOptionPane.showMessageDialog(jFrame, "Updated all successfully");
+                            count = 0;
+                        }
+                    }
+                } else if (selectedIndex == 2) {
+                    int lastRow = tableScores.getRowCount();
+                    count += 1;
+                    if (count == lastRow) {
+                        if (response.body().toString().contains("Student updated successfully")) {
+                            JOptionPane.showMessageDialog(jFrame, "Updated all successfully");
+                            count = 0;
+                        }
+                    }
+                } else if (selectedIndex == 3) {
+                    int lastRow = tableConduct.getRowCount();
+                    count += 1;
+                    if (count == lastRow) {
+                        if (response.body().toString().contains("Student updated successfully")) {
+                            JOptionPane.showMessageDialog(jFrame, "Updated all successfully");
+                            count = 0;
+                        }
+                    }
+                } else if (selectedIndex == 4) {
+                    int lastRow = tablePersonalInformation.getRowCount();
+                    count += 1;
+                    if (count == lastRow) {
+                        if (response.body().toString().contains("Student updated successfully")) {
+                            JOptionPane.showMessageDialog(jFrame, "Updated all successfully");
+                            count = 0;
+                        }
+                    }
                 }
+
+
+//
+//                if (selectedIndexTabScore == 2) {
+//
+//                    int lastRow = tableScores.getRowCount() - 1;
+//
+//                    count += 1;
+//
+//                    if (count == lastRow) {
+//
+//                        //HttpHeaders headers = response.headers();
+//
+//                        //String lastID = headers.firstValue("LastID").orElse(null);
+//
+//                        //int intValue = Integer.parseInt(lastID);
+//
+//                       // if (studentID == intValue) {
+//                            if (response.body().toString().contains("Student updated successfully")) {
+//                                JOptionPane.showMessageDialog(jFrame, "Updated all successfully");
+//                                count = 0;
+//                           // }
+//                        }
+//                    }
+//
+//                } else {
+//
+//                    String responseBody = response.body().toString();
+//
+//                    JsonObject jsonObject = JsonParser.parseString(responseBody).getAsJsonObject();
+//                    String specificValue = jsonObject.get("message").getAsString();
+//
+//                    // Display successful update notification for each student
+//                    JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + specificValue);
+//                    int lastRow = tableScores.getRowCount() - 1;
+//
+//
+//                    if (count == lastRow) {
+//
+//                        HttpHeaders headers = response.headers();
+//
+//                        String lastID = headers.firstValue("LastID").orElse(null);
+//
+//                        int intValue = Integer.parseInt(lastID);
+//
+//                        if (studentID == intValue) {
+//                            if (response.body().toString().contains("Student updated successfully")) {
+//                                JOptionPane.showMessageDialog(jFrame, "Updated all successfully");
+//                                count = 0;
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                String responseBody = response.body().toString();
+//
+//                JsonObject jsonObject = JsonParser.parseString(responseBody).getAsJsonObject();
+//                String specificValue = jsonObject.get("message").getAsString();
+//
+//                // Display successful update notification for each student
+//                JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + specificValue);
+
             } else {
+//
+//                if (selectedIndexTabScore == 2) {
+//                    JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + payload);
+//                    // must to return , if not have return the code will continue
+//                    return;
+//                }
+//
+//                flagSaveEditButton = false;
+//                // Check if string is JSON or not
+//                boolean isJson = isJSONValid(response.body());
+//                if (isJson) {
+//                    JsonObject responseBody = JsonParser.parseString(response.body()).getAsJsonObject();
+//                    displayErrorMessages(responseBody, studentID);
+//                } else {
+//                    JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body().toString());
+//
+//                }
+//                flagSaveEditButton = true;
 
-                if (selectedIndexTabScore == 2) {
-                    JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + payload);
-                    return;
-                }
 
-                flagSaveEditButton = false;
-                // Check if string is JSON or not
-                boolean isJson = isJSONValid(response.body());
-                if (isJson) {
-                    JsonObject responseBody = JsonParser.parseString(response.body()).getAsJsonObject();
-                    displayErrorMessages(responseBody, studentID);
-                } else {
-                    JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body().toString());
+                JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + payload);
 
-                }
-                flagSaveEditButton = true;
             }
 
         } catch (IOException | InterruptedException ex) {
@@ -174,20 +260,6 @@ public class SaveEditButtonListener implements ActionListener {
         } catch (JsonSyntaxException ex) {
             return false;
         }
-    }
-
-    public static String extractSubjectNameFromPayload(String payload) {
-        int indexStart = payload.indexOf("\"subjectName\":");
-        if (indexStart != -1) {
-            int valueStart = payload.indexOf("\"", indexStart + "\"subjectName\":".length() + 1);
-            if (valueStart != -1) {
-                int valueEnd = payload.indexOf("\"", valueStart + 1);
-                if (valueEnd != -1) {
-                    return payload.substring(valueStart + 1, valueEnd);
-                }
-            }
-        }
-        return null;
     }
 }
 
