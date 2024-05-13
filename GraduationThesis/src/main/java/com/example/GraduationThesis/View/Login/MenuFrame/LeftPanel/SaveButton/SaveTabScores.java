@@ -3,8 +3,6 @@ package com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.SaveButton;
 import com.example.GraduationThesis.Model.Enitity.Users.Roles.ERole;
 import com.example.GraduationThesis.Service.LazySingleton.ListRoles.ListRolesManager;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabScores.TabScoresAction;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;

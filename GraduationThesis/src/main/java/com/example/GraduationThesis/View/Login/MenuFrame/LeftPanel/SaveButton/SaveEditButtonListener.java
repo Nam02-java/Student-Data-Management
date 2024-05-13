@@ -1,15 +1,11 @@
 package com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.SaveButton;
 
 import com.example.GraduationThesis.Service.LazySingleton.JsonWebToken.JsonWebTokenManager;
-import com.fasterxml.jackson.databind.util.JSONPObject;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -20,7 +16,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class SaveEditButtonListener implements ActionListener {
     private static JFrame jFrame;
@@ -92,28 +87,23 @@ public class SaveEditButtonListener implements ActionListener {
             if (response.statusCode() == 200) {
                 if (selectedIndexTabScore == 2) {
 
-//                    int lastRow = tableScores.getRowCount() - 1;
-//
-//                    count += 1;
-//
-//                    if (count == lastRow) {
-//
-//                        HttpHeaders headers = response.headers();
-//                        String lastID = headers.firstValue("LastID").orElse(null);
-//                        int intValue = Integer.parseInt(lastID);
-//
-//                        if (studentID == intValue) {
-//                            if (response.body().toString().contains("Student updated successfully")) {
-//                                System.out.println("before");
-//                                JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body());
-//                                count = 0;
-//                            }
-//                            System.out.println("next");
-//                            JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body());
-//                            count = 0;
-//                        }
-//                    }
-                    
+                    int lastRow = tableScores.getRowCount() - 1;
+
+                    count += 1;
+
+                    if (count == lastRow) {
+
+                        HttpHeaders headers = response.headers();
+                        String lastID = headers.firstValue("LastID").orElse(null);
+                        int intValue = Integer.parseInt(lastID);
+
+                        if (studentID == intValue) {
+                            if (response.body().toString().contains("Student updated successfully")) {
+                                JOptionPane.showMessageDialog(jFrame, "Updated all successfully");
+                                count = 0;
+                            }
+                        }
+                    }
 
 
                 } else {
