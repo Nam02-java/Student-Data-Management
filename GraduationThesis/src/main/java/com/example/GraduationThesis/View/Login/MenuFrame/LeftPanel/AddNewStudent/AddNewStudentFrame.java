@@ -1,7 +1,6 @@
 package com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.AddNewStudent;
 
 
-import com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.AddNewStudent.Button.StudentInfoForm;
 import com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.AddNewStudent.Button.SubmitButtonListener;
 import com.example.GraduationThesis.View.Login.MenuFrame.MenuFrame;
 

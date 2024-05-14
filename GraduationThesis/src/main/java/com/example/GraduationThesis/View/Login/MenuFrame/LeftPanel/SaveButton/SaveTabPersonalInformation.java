@@ -105,14 +105,12 @@ public class SaveTabPersonalInformation {
                         }
                     } else if (j == 7) { //j == 7 at column parents numberphone
                         if (!isValidPhoneNumber(value)) {
-                            payload = "Invalid parents's numberphone format";
+                            payload = "Invalid parent's phone number format";
                             sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
                             flag = false;
                             break;
                         }
-                        sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
-                        flag = false;
-                        break;
+
                     }
                 }
             }

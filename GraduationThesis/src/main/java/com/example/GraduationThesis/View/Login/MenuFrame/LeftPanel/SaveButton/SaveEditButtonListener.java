@@ -1,18 +1,14 @@
 package com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.SaveButton;
 
 import com.example.GraduationThesis.Service.LazySingleton.JsonWebToken.JsonWebTokenManager;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
+
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
@@ -131,87 +127,7 @@ public class SaveEditButtonListener implements ActionListener {
                     }
                 }
 
-
-//
-//                if (selectedIndexTabScore == 2) {
-//
-//                    int lastRow = tableScores.getRowCount() - 1;
-//
-//                    count += 1;
-//
-//                    if (count == lastRow) {
-//
-//                        //HttpHeaders headers = response.headers();
-//
-//                        //String lastID = headers.firstValue("LastID").orElse(null);
-//
-//                        //int intValue = Integer.parseInt(lastID);
-//
-//                       // if (studentID == intValue) {
-//                            if (response.body().toString().contains("Student updated successfully")) {
-//                                JOptionPane.showMessageDialog(jFrame, "Updated all successfully");
-//                                count = 0;
-//                           // }
-//                        }
-//                    }
-//
-//                } else {
-//
-//                    String responseBody = response.body().toString();
-//
-//                    JsonObject jsonObject = JsonParser.parseString(responseBody).getAsJsonObject();
-//                    String specificValue = jsonObject.get("message").getAsString();
-//
-//                    // Display successful update notification for each student
-//                    JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + specificValue);
-//                    int lastRow = tableScores.getRowCount() - 1;
-//
-//
-//                    if (count == lastRow) {
-//
-//                        HttpHeaders headers = response.headers();
-//
-//                        String lastID = headers.firstValue("LastID").orElse(null);
-//
-//                        int intValue = Integer.parseInt(lastID);
-//
-//                        if (studentID == intValue) {
-//                            if (response.body().toString().contains("Student updated successfully")) {
-//                                JOptionPane.showMessageDialog(jFrame, "Updated all successfully");
-//                                count = 0;
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                String responseBody = response.body().toString();
-//
-//                JsonObject jsonObject = JsonParser.parseString(responseBody).getAsJsonObject();
-//                String specificValue = jsonObject.get("message").getAsString();
-//
-//                // Display successful update notification for each student
-//                JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + specificValue);
-
             } else {
-//
-//                if (selectedIndexTabScore == 2) {
-//                    JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + payload);
-//                    // must to return , if not have return the code will continue
-//                    return;
-//                }
-//
-//                flagSaveEditButton = false;
-//                // Check if string is JSON or not
-//                boolean isJson = isJSONValid(response.body());
-//                if (isJson) {
-//                    JsonObject responseBody = JsonParser.parseString(response.body()).getAsJsonObject();
-//                    displayErrorMessages(responseBody, studentID);
-//                } else {
-//                    JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + response.body().toString());
-//
-//                }
-//                flagSaveEditButton = true;
-
 
                 JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + payload);
 
@@ -222,44 +138,37 @@ public class SaveEditButtonListener implements ActionListener {
         }
     }
 
-    private static void displayErrorMessages(JsonObject responseBody, int studentID) {
-
-        // Add the keys to check to the fieldsToCheck list
-        fieldsToCheck.clear();
-        fieldsToCheck.add("username");
-        fieldsToCheck.add("classname");
-        fieldsToCheck.add("email");
-        fieldsToCheck.add("dateOfBirth");
-        fieldsToCheck.add("numberphone");
-        fieldsToCheck.add("address");
-        fieldsToCheck.add("position");
-        fieldsToCheck.add("teachername");
-        fieldsToCheck.add("partentsname");
-        fieldsToCheck.add("partensnumberphone");
-
-
-        StringBuilder errorMessage = new StringBuilder();
-
-        // Checks and displays error messages for the current field
-        for (String field : fieldsToCheck) {
-            if (responseBody.has(field)) {
-                String fieldValue = responseBody.get(field).getAsString();
-                // if (fieldValue.contains("is not empty or null") || fieldValue.contains("Number phone") || fieldValue.contains("Student name must have 2 to 50 characters")) {
-                errorMessage.append(fieldValue);
-                JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + errorMessage.toString());
-                return; // Stop the loop after displaying the first error message
-            }
-        }
-    }
-
-    // Method to check if string is JSON or not
-    public static boolean isJSONValid(String jsonInString) {
-        try {
-            JsonParser.parseString(jsonInString);
-            return true;
-        } catch (JsonSyntaxException ex) {
-            return false;
-        }
-    }
+    /**
+     * no need at present
+     */
+//    private static void displayErrorMessages(JsonObject responseBody, int studentID) {
+//
+//        // Add the keys to check to the fieldsToCheck list
+//        fieldsToCheck.clear();
+//        fieldsToCheck.add("username");
+//        fieldsToCheck.add("classname");
+//        fieldsToCheck.add("email");
+//        fieldsToCheck.add("dateOfBirth");
+//        fieldsToCheck.add("numberphone");
+//        fieldsToCheck.add("address");
+//        fieldsToCheck.add("position");
+//        fieldsToCheck.add("teachername");
+//        fieldsToCheck.add("partentsname");
+//        fieldsToCheck.add("partensnumberphone");
+//
+//
+//        StringBuilder errorMessage = new StringBuilder();
+//
+//        // Checks and displays error messages for the current field
+//        for (String field : fieldsToCheck) {
+//            if (responseBody.has(field)) {
+//                String fieldValue = responseBody.get(field).getAsString();
+//                // if (fieldValue.contains("is not empty or null") || fieldValue.contains("Number phone") || fieldValue.contains("Student name must have 2 to 50 characters")) {
+//                errorMessage.append(fieldValue);
+//                JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + errorMessage.toString());
+//                return; // Stop the loop after displaying the first error message
+//            }
+//        }
+//    }
 }
 
