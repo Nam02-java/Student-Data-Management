@@ -1,6 +1,5 @@
 package com.example.GraduationThesis.Service.API.ServiceImplenments.AdminAndUser.Authentication;
 
-
 import com.example.GraduationThesis.Controller.SringSecurity6.JsonWebToken.JsonWebTokenProvider;
 import com.example.GraduationThesis.Controller.SringSecurity6.UserData.CustomUserDetails;
 import com.example.GraduationThesis.Model.Enitity.Users.Roles.ERole;
@@ -22,7 +21,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -111,7 +109,6 @@ public class AuthenticationImplementation implements AuthenticationServiceAPI {
         } catch (BadCredentialsException e) {
 
             // Handle incorrect username or password
-
             if (userService.existsByUsername(loginRequest.getUsername())) {
                 return new LoginResponse(null, null, null, null, null, null, LOGIN_FAILED_WRONG_PASSWORD.toString());
             } else {

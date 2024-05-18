@@ -3,11 +3,8 @@ package com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.AddNewStuden
 
 import com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.AddNewStudent.Button.SubmitButtonListener;
 import com.example.GraduationThesis.View.Login.MenuFrame.MenuFrame;
-
 import javax.swing.*;
 import java.awt.*;
-
-
 import java.util.ArrayList;
 
 
@@ -23,13 +20,13 @@ public class AddNewStudentFrame extends JFrame {
     private JTextField partentsnameField;
     private JTextField partensnumberphoneField;
     private ArrayList<JTextField[]> scoreFields;
-
-
+    private ArrayList<JTextField[]> conductFieldsList;
     private MenuFrame menuFrame;
+
 
     public AddNewStudentFrame(MenuFrame menuFrame) {
         this.menuFrame = menuFrame;
-        // Tạo các label và text field cho thông tin cá nhân
+        // Create labels and text fields for personal information
         JLabel usernameLabel = new JLabel("Username:");
         usernameField = new JTextField(20);
         JLabel classnameLabel = new JLabel("Classname:");
@@ -103,32 +100,43 @@ public class AddNewStudentFrame extends JFrame {
         }
 
         // Create a panel for conduct
-        JPanel conductPanel = new JPanel(new GridLayout(5, 2));
-        JLabel conduct2017_2018Label = new JLabel("Conduct 2017-2018:");
-        conductPanel.add(conduct2017_2018Label);
-        JTextField conduct2017_2018TextField = new JTextField(20);
-        conductPanel.add(conduct2017_2018TextField);
+        JPanel conductPanel = new JPanel(new GridLayout(4, 4));
 
-        JLabel conduct2018_2019Label = new JLabel("Conduct 2018-2019:");
-        conductPanel.add(conduct2018_2019Label);
-        JTextField conduct2018_2019TextField = new JTextField(20);
-        conductPanel.add(conduct2018_2019TextField);
-
-        JLabel conduct2019_2020Label = new JLabel("Conduct 2019-2020:");
-        conductPanel.add(conduct2019_2020Label);
-        JTextField conduct2019_2020TextField = new JTextField(20);
-        conductPanel.add(conduct2019_2020TextField);
-
+        // Add labels for each column
+        conductPanel.add(new JLabel()); // Empty label for the corner
+        JLabel schoolYearLabel = new JLabel("School Year:");
+        JLabel conductLabel = new JLabel("Conduct:");
         JLabel attendanceScoreLabel = new JLabel("Attendance Score:");
+
+        conductPanel.add(schoolYearLabel);
+        conductPanel.add(conductLabel);
         conductPanel.add(attendanceScoreLabel);
-        JTextField attendanceScoreTextField = new JTextField(20);
-        conductPanel.add(attendanceScoreTextField);
 
+        // Add the row labels and text fields
+        conductFieldsList = new ArrayList<>();
 
-        // create submit button
+        String[] yearLabels = {"First", "Second", "Third"};
+        for (String yearLabel : yearLabels) {
+
+            JLabel year = new JLabel(yearLabel + " School Year:");
+            JTextField schoolYearTextField = new JTextField(20);
+            JTextField conductTextField = new JTextField(20);
+            JTextField attendanceScoreTextField = new JTextField(20);
+
+            JTextField[] yearFields = {schoolYearTextField, conductTextField, attendanceScoreTextField};
+            conductFieldsList.add(yearFields);
+
+            conductPanel.add(year);
+            conductPanel.add(schoolYearTextField);
+            conductPanel.add(conductTextField);
+            conductPanel.add(attendanceScoreTextField);
+        }
+
+        // Create a submit button
         JButton submitButton = new JButton("Submit");
-        submitButton.addActionListener(new SubmitButtonListener(menuFrame, this, usernameField, classnameField, emailField, dateOfBirthField, numberphoneField, addressField, positionField, teachernameField, partentsnameField, partensnumberphoneField, scoreFields, conduct2017_2018TextField, conduct2018_2019TextField, conduct2019_2020TextField, attendanceScoreTextField));
+        submitButton.addActionListener(new SubmitButtonListener(menuFrame, this, usernameField, classnameField, emailField, dateOfBirthField, numberphoneField, addressField, positionField, teachernameField, partentsnameField, partensnumberphoneField, scoreFields, conductFieldsList));
 
+        // Create the main panel
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.add(personalInfoPanel);
@@ -136,6 +144,7 @@ public class AddNewStudentFrame extends JFrame {
         mainPanel.add(conductPanel);
         mainPanel.add(submitButton);
 
+        // Add the main panel to the frame
         add(mainPanel);
 
         setTitle("Student Information Form");

@@ -3,6 +3,7 @@ package com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.AddNewStuden
 import com.example.GraduationThesis.Service.LazySingleton.JsonWebToken.JsonWebTokenManager;
 import com.example.GraduationThesis.View.Login.MenuFrame.MenuFrame;
 import com.google.gson.*;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -26,16 +27,15 @@ public class SubmitButtonListener implements ActionListener {
     private JTextField partentsnameField;
     private JTextField partensnumberphoneField;
     private ArrayList<JTextField[]> scoreFields;
-    private JTextField conduct2017_2018TextField;
-    private JTextField conduct2018_2019TextField;
-    private JTextField conduct2019_2020TextField;
-    private JTextField attendanceScoreTextField;
+    private ArrayList<JTextField[]> conductFieldsList;
+
+
     private JFrame jFrame;
     private MenuFrame menuFrame;
     private String[] subjects = {"Literature", "Math", "English", "History", "Geography", "Physics", "Chemistry", "Biology", "Citizen_Education", "National_Defense_And_Security_Education", "Technology", "Information_Technology", "Physical_Education"};
     private final List<String> fieldsToCheck = new ArrayList<>();
 
-    public SubmitButtonListener(MenuFrame menuFrame, JFrame jFrame, JTextField usernameField, JTextField classnameField, JTextField emailField, JTextField dateOfBirthField, JTextField numberphoneField, JTextField addressField, JTextField positionField, JTextField teachernameField, JTextField partentsnameField, JTextField partensnumberphoneField, ArrayList<JTextField[]> scoreFields, JTextField conduct2017_2018TextField, JTextField conduct2018_2019TextField, JTextField conduct2019_2020TextField, JTextField attendanceScoreTextField) {
+    public SubmitButtonListener(MenuFrame menuFrame, JFrame jFrame, JTextField usernameField, JTextField classnameField, JTextField emailField, JTextField dateOfBirthField, JTextField numberphoneField, JTextField addressField, JTextField positionField, JTextField teachernameField, JTextField partentsnameField, JTextField partensnumberphoneField, ArrayList<JTextField[]> scoreFields, ArrayList<JTextField[]> conductFieldsList) {
         this.menuFrame = menuFrame;
         this.jFrame = jFrame;
         this.usernameField = usernameField;
@@ -49,10 +49,8 @@ public class SubmitButtonListener implements ActionListener {
         this.partentsnameField = partentsnameField;
         this.partensnumberphoneField = partensnumberphoneField;
         this.scoreFields = scoreFields;
-        this.conduct2017_2018TextField = conduct2017_2018TextField;
-        this.conduct2018_2019TextField = conduct2018_2019TextField;
-        this.conduct2019_2020TextField = conduct2019_2020TextField;
-        this.attendanceScoreTextField = attendanceScoreTextField;
+        this.conductFieldsList = conductFieldsList;
+
     }
 
     @Override
@@ -127,32 +125,42 @@ public class SubmitButtonListener implements ActionListener {
         }
         scorePayload.add("scores", scoresArray);
 
-        // Create a JsonObject object to represent conductPay
+        // Create a JsonObject object to represent conductPayload
         JsonObject conductPayload = new JsonObject();
         JsonArray conductsArray = new JsonArray();
 
-        // Create a JsonObject for each conduct and add it to conductsArray
-        JsonObject conductObject = new JsonObject();
-        JsonArray conductArray = new JsonArray();
-        String conduct2017_2018 = conduct2017_2018TextField.getText();
-        String conduct2018_2019 = conduct2018_2019TextField.getText();
-        String conduct2019_2020 = conduct2019_2020TextField.getText();
-        String attendanceScore = attendanceScoreTextField.getText();
-        conductArray.add(conduct2017_2018);
-        conductArray.add(conduct2018_2019);
-        conductArray.add(conduct2019_2020);
-        conductArray.add(attendanceScore);
-        conductObject.add("conduct", conductArray);
-        conductsArray.add(conductObject);
+        // Loop through conductFieldsList to get conduct data for each year
+        for (JTextField[] conductFields : conductFieldsList) {
+
+            JsonObject conductObject = new JsonObject();
+            JsonArray conductArray = new JsonArray();
+
+            // Get data from JTextField fields for conduct
+            String schoolYear = conductFields[0].getText().replace(" ", "");
+            String conduct = conductFields[1].getText().replace(" ", "");
+            String attendanceScore = conductFields[2].getText().replace(" ", "");
+
+            // Add conduct data to conductArray
+            conductArray.add(schoolYear);
+            conductArray.add(conduct);
+            conductArray.add(attendanceScore);
+
+            // Add conductArray to conductObject
+            conductObject.add("conduct", conductArray);
+
+            // Add conductObject to conductsArray
+            conductsArray.add(conductObject);
+        }
         conductPayload.add("conducts", conductsArray);
 
         requestBody.add("scorePayload", scorePayload);
+
         requestBody.add("conductPayload", conductPayload);
 
         // Convert the request Body object to a JSON string
         String jsonBody = new Gson().toJson(requestBody);
 
-        System.out.println(jsonBody);
+        System.out.println("Add new student json : " + jsonBody);
 
         HttpClient httpClient = HttpClient.newHttpClient();
 

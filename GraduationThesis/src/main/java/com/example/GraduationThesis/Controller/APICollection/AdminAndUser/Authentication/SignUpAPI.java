@@ -29,6 +29,14 @@ public class SignUpAPI {
     }
 
 
+    /**
+     * very necessary !
+     * to handle @Valid error not returning results for response
+     * the @ExceptionHandler annotation
+     * https://www.baeldung.com/spring-boot-bean-validation
+     * @param ex
+     * @return
+     */
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
