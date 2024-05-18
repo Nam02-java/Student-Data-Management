@@ -68,9 +68,8 @@ public class UserQueryConductScoreDataImplenmentation implements UserServiceRead
                     List<Map<String, String>> conductInfoList = new ArrayList<>();
                     for (Conduct conduct : student.getConducts()) {
                         Map<String, String> conductMap = new LinkedHashMap<>();
-                        conductMap.put("Conduct2017_2018", conduct.getConduct2017_2018());
-                        conductMap.put("Conduct2018_2019", conduct.getConduct2018_2019());
-                        conductMap.put("Conduct2019_2020", conduct.getConduct2019_2020());
+                        conductMap.put("School_Year", conduct.getSchool_year());
+                        conductMap.put("Conduct", conduct.getConduct());
                         conductMap.put("Attendance_Score", conduct.getAttendance_Score());
                         conductInfoList.add(conductMap);
                     }

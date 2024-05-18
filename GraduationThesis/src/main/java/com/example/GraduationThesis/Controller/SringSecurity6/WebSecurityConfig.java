@@ -27,6 +27,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * the user's authority before accessing the API
  */
 @EnableMethodSecurity(prePostEnabled = true)
+
 public class WebSecurityConfig {
     @Autowired
     private CustomUserDetailsService customUserDetailsService;

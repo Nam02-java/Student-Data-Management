@@ -38,7 +38,7 @@ public class TabConductAction {
             String responseBody = response.body();
             System.out.println("Response from API: " + responseBody);
 
-            // Convert JSON thành một danh sách các map
+            // Convert JSON to a list of maps
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(responseBody, new TypeReference<List<Map<String, Object>>>() {
             });

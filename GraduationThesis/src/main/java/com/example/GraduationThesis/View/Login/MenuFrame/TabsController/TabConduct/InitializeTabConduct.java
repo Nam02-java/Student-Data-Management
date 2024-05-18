@@ -22,7 +22,7 @@ public class InitializeTabConduct extends JPanel {
         setLayout(new BorderLayout());
 
         // create table
-        String[] columns = {"ID", "Student Name", "Conduct2017_2018", "Conduct2018_2019", "Conduct2019_2020", "Attendance_Score"};
+        String[] columns = {"ID", "Student Name", "School Year", "Conduct", "Attendance_Score"};
 
         // disable editing of edit and gpa columns
         DefaultTableModel model = new DefaultTableModel(columns, 0) {
@@ -73,22 +73,22 @@ public class InitializeTabConduct extends JPanel {
 
         // iterate over each object in the list and add it to the table
         data.forEach(row -> {
-            // get data of student
+
             int studentID = (int) row.get("ID");
             String studentName = (String) row.get("Student Name");
 
             List<Map<String, Object>> conducts = (List<Map<String, Object>>) row.get("Conducts");
-            conducts.stream().findFirst().ifPresent(conduct -> {
-                String conduct2017_2018 = (String) conduct.get("Conduct2017_2018");
-                String conduct2018_2019 = (String) conduct.get("Conduct2018_2019");
-                String conduct2019_2020 = (String) conduct.get("Conduct2019_2020");
+
+            conducts.forEach(conduct -> {
+
+                String schoolYear = (String) conduct.get("School_Year");
+                String conductToString = (String) conduct.get("Conduct");
                 String attendanceScore = (String) conduct.get("Attendance_Score");
 
                 if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
-                    model.addRow(new Object[]{studentID, studentName, conduct2017_2018, conduct2018_2019, conduct2019_2020, attendanceScore, "Delete"});
-
+                    model.addRow(new Object[]{studentID, studentName, schoolYear, conductToString, attendanceScore, "Delete"});
                 } else {
-                    model.addRow(new Object[]{studentID, studentName, conduct2017_2018, conduct2018_2019, conduct2019_2020, attendanceScore});
+                    model.addRow(new Object[]{studentID, studentName, schoolYear, conductToString, attendanceScore});
                 }
             });
         });
@@ -100,7 +100,6 @@ public class InitializeTabConduct extends JPanel {
         model.setValueAt("", rowIndex, 2);
         model.setValueAt("", rowIndex, 3);
         model.setValueAt("", rowIndex, 4);
-        model.setValueAt("", rowIndex, 5);
     }
 
     public JTable getTable() {

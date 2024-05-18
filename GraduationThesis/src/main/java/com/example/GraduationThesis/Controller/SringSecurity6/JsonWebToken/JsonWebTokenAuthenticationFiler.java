@@ -56,6 +56,7 @@ public class JsonWebTokenAuthenticationFiler extends OncePerRequestFilter {
 
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
+
         // check if the Authorization header contains jwt information
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);

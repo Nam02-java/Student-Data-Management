@@ -4,7 +4,6 @@ import com.example.GraduationThesis.Model.PayLoad.Student.SignUpStudent.Conduct.
 import com.example.GraduationThesis.Model.PayLoad.Student.SignUpStudent.Scores.ScorePayload;
 import lombok.Data;
 
-import java.util.Date;
 import java.util.Map;
 
 @Data

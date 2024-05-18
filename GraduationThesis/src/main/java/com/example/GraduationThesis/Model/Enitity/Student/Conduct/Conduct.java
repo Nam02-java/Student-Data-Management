@@ -18,14 +18,11 @@ public class Conduct {
     @JoinColumn(name = "Student_ID", referencedColumnName = "id")
     private Student student;
 
-    @Column(name = "Conduct2017_2018")
-    private String conduct2017_2018;
+    @Column(name = "School_Year")
+    private String school_year;
 
-    @Column(name = "Conduct2018_2019")
-    private String conduct2018_2019;
-
-    @Column(name = "Conduct2019_2020")
-    private String conduct2019_2020;
+    @Column(name = "Conduct")
+    private String conduct;
 
     @Column(name = "Attendance_Score")
     private String attendance_Score;

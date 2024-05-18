@@ -1,5 +1,6 @@
 package com.example.GraduationThesis.Service.API.ServiceImplenments.Admin.CRUD.Update.Student;
 
+import com.example.GraduationThesis.Model.Enitity.Student.Conduct.Conduct;
 import com.example.GraduationThesis.Model.Enitity.Student.Student;
 import com.example.GraduationThesis.Model.Enitity.Student.Subject.Scores;
 import com.example.GraduationThesis.Model.Enitity.Student.Subject.Subjects;
@@ -289,22 +290,59 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
 
     /**
      * conduct of student
-     *
      * @param student
      * @param conductPayload
+     * Currently not in use !
+     * This is old method
+     */
+//    private void updateStudentConduct(Student student, ConductPayloadTest conductPayload) {
+//        if (conductPayload != null && conductPayload.getConducts() != null) {
+//            for (ConductRequestTest conductRequest : conductPayload.getConducts()) {
+//                List<String> conductValues = conductRequest.getConduct();
+//                student.getConducts().forEach(conduct -> {
+//                    if (conductValues.size() >= 3) {
+//                        conduct.setSchool_year(conductValues.get(0));
+//                        conduct.setConduct(conductValues.get(1));
+//                        conduct.setAttendance_Score(conductValues.get(2));
+//                    }
+//                });
+//            }
+//        }
+//    }
+
+    /**
+     * conduct of student
+     * @param student
+     * @param conductPayload
+     * New update at 17/5/2024
      */
     private void updateStudentConduct(Student student, ConductPayload conductPayload) {
         if (conductPayload != null && conductPayload.getConducts() != null) {
-            for (ConductRequest conductRequest : conductPayload.getConducts()) {
+            List<ConductRequest> conductRequests = conductPayload.getConducts();
+            List<Conduct> studentConducts = student.getConducts();
+
+            // Browse the number of behaviors in the payload and update the corresponding student behaviors
+            for (int i = 0; i < conductRequests.size() && i < studentConducts.size(); i++) {
+                ConductRequest conductRequest = conductRequests.get(i);
                 List<String> conductValues = conductRequest.getConduct();
-                student.getConducts().forEach(conduct -> {
-                    if (conductValues.size() >= 4) {
-                        conduct.setConduct2017_2018(conductValues.get(0));
-                        conduct.setConduct2018_2019(conductValues.get(1));
-                        conduct.setConduct2019_2020(conductValues.get(2));
-                        conduct.setAttendance_Score(conductValues.get(3));
-                    }
-                });
+
+                if (conductValues.size() >= 3) {
+                    Conduct studentConduct = studentConducts.get(i);
+                    studentConduct.setSchool_year(conductValues.get(0));
+                    studentConduct.setConduct(conductValues.get(1));
+                    studentConduct.setAttendance_Score(conductValues.get(2));
+                }
+            }
+
+            /**
+             * pf the number of quantities in the payload is less than the student's quantity quantity
+             * set the remaining quantities to empty
+             */
+            for (int i = conductRequests.size(); i < studentConducts.size(); i++) {
+                Conduct studentConduct = studentConducts.get(i);
+                studentConduct.setSchool_year("");
+                studentConduct.setConduct("");
+                studentConduct.setAttendance_Score("");
             }
         }
     }

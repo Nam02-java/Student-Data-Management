@@ -26,6 +26,7 @@ public class DeleteTabConductImplements implements ActionInterface {
     public <T> void deleteTabConduct(T value, JTable table, int selectedRow) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         String payload = buildPayload(model, selectedRow);
+        System.out.println("Payload delete : " + payload);
         sendRequest(payload);
 
     }
@@ -36,7 +37,6 @@ public class DeleteTabConductImplements implements ActionInterface {
     }
 
     private void sendRequest(String payload) {
-        System.out.println("MY PAYLOAD :  " + payload);
         HttpClient httpClient = HttpClient.newHttpClient();
         String url = "http://localhost:8080/api/v1/admin/updateStudentByID";
         HttpRequest request = HttpRequest.newBuilder()
@@ -54,32 +54,61 @@ public class DeleteTabConductImplements implements ActionInterface {
     }
 
     private String buildPayload(DefaultTableModel model, int selectedRow) {
-        // get information student from table
-        int userId = (int) model.getValueAt(selectedRow, 0);
 
-        // get conduct information from table
-        String conduct2017_2018 = (String) model.getValueAt(selectedRow, 2);
-        String conduct2018_2019 = (String) model.getValueAt(selectedRow, 3);
-        String conduct2019_2020 = (String) model.getValueAt(selectedRow, 4);
-        String attendanceScore = (String) model.getValueAt(selectedRow, 5);
+        int lastResult = 0;
 
-        // generate the corresponding JSON string
+        Object currentID = model.getValueAt(selectedRow, 0);
+
+        Object checkID;
+        for (int i = 0; i < model.getRowCount(); i++) {
+            checkID = model.getValueAt(i, 0);
+            if (currentID.equals(checkID)) {
+                lastResult = i;
+                System.out.println("lastResult : " + lastResult);
+                break;
+            }
+        }
+
+
         StringBuilder payloadBuilder = new StringBuilder();
         payloadBuilder.append("{");
-        payloadBuilder.append("\"userId\": ").append(userId).append(",");
+        payloadBuilder.append("\"userId\": ").
+
+                append(model.getValueAt(selectedRow, 0)).
+
+                append(",");
+
         payloadBuilder.append("\"conductPayload\": {");
         payloadBuilder.append("\"conducts\": [");
-        payloadBuilder.append("{");
-        payloadBuilder.append("\"conduct\": [");
-        payloadBuilder.append("\"").append(conduct2017_2018).append("\",");
-        payloadBuilder.append("\"").append(conduct2018_2019).append("\",");
-        payloadBuilder.append("\"").append(conduct2019_2020).append("\",");
-        payloadBuilder.append("\"").append(attendanceScore).append("\"");
+
+        int countToStopComma = 1;
+        for (int i = lastResult; i < lastResult + 3; i++) {
+            if (i < model.getRowCount()) {
+                String schoolYear = model.getValueAt(i, 2).toString().replace(" ", "");
+                String conduct = model.getValueAt(i, 3).toString().replace(" ", "");
+                String attendanceScore = model.getValueAt(i, 4).toString().replace(" ", "");
+
+                payloadBuilder.append("{");
+                payloadBuilder.append("\"conduct\": [");
+                payloadBuilder.append("\"").append(schoolYear).append("\",");
+                payloadBuilder.append("\"").append(conduct).append("\",");
+                payloadBuilder.append("\"").append(attendanceScore).append("\"");
+                payloadBuilder.append("]");
+                payloadBuilder.append("}");
+                if (i != selectedRow + 2 && i != model.getRowCount() - 1) {
+                    if(countToStopComma==3){
+                        break;
+                    }
+                    payloadBuilder.append(",");
+                    countToStopComma += 1;
+                }
+            }
+        }
+
         payloadBuilder.append("]");
         payloadBuilder.append("}");
-        payloadBuilder.append("]");
         payloadBuilder.append("}");
-        payloadBuilder.append("}");
+
         return payloadBuilder.toString();
     }
 }

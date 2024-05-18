@@ -34,6 +34,7 @@ public class SaveEditButtonListener implements ActionListener {
     private static int selectedIndex;
 
     private static int count = 1;
+    private static int countTabConduct;
 
     public SaveEditButtonListener(JTabbedPane tabbedPane, JTable tableTabGeneralInformation, JTable tableTabPosition, JTable tableScores, JTable tableConduct, JTable tablePersonalInformation, JFrame jFrame) {
         this.tabbedPane = tabbedPane;
@@ -56,6 +57,7 @@ public class SaveEditButtonListener implements ActionListener {
         } else if (selectedIndex == 2) {
             SaveTabScores.sendUpdateRequest(tableScores);
         } else if (selectedIndex == 3) {
+            countTabConduct = tableConduct.getRowCount() / 3;
             SaveTabConduct.sendUpdateRequest(tableConduct);
         } else if (selectedIndex == 4) {
             SaveTabPersonalInformation.sendUpdateRequest(tablePersonalInformation);
@@ -108,14 +110,14 @@ public class SaveEditButtonListener implements ActionListener {
                         }
                     }
                 } else if (selectedIndex == 3) {
-                    int lastRow = tableConduct.getRowCount();
-                    count += 1;
-                    if (count == lastRow) {
+                    if (countTabConduct != 1) {
+                        countTabConduct -= 1;
+                    } else {
                         if (response.body().toString().contains("Student updated successfully")) {
                             JOptionPane.showMessageDialog(jFrame, "Updated all successfully");
-                            count = 0;
                         }
                     }
+
                 } else if (selectedIndex == 4) {
                     int lastRow = tablePersonalInformation.getRowCount();
                     count += 1;

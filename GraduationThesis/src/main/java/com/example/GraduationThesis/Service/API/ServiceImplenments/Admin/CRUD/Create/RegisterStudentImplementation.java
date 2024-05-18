@@ -138,16 +138,23 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
         List<Conduct> conductList = new ArrayList<>();
         conductPayload.getConducts().forEach(conduct -> {
             Conduct conducts = new Conduct();
-
             List<String> individualScores = conduct.getConduct();
-            conducts.setConduct2017_2018(individualScores.get(0));
-            conducts.setConduct2018_2019(individualScores.get(1));
-            conducts.setConduct2019_2020(individualScores.get(2));
-            conducts.setAttendance_Score(individualScores.get(3));
+            conducts.setSchool_year(individualScores.size() > 0 ? individualScores.get(0) : "");
+            conducts.setConduct(individualScores.size() > 1 ? individualScores.get(1) : "");
+            conducts.setAttendance_Score(individualScores.size() > 2 ? individualScores.get(2) : "");
             conducts.setStudent(student);
             conductList.add(conducts);
-
         });
+
+        // Add empty elements if needed
+        while (conductList.size() < 3) {
+            Conduct emptyConduct = new Conduct();
+            emptyConduct.setSchool_year("");
+            emptyConduct.setConduct("");
+            emptyConduct.setAttendance_Score("");
+            emptyConduct.setStudent(student);
+            conductList.add(emptyConduct);
+        }
 
         student.setConducts(conductList);
 

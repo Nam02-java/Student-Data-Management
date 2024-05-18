@@ -19,13 +19,13 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Kiểm tra xem user có tồn tại trong database không?
+        // Check if user exists in database?
         Users user = userRepository.findByUsername(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
         }
-        // return new CustomUserDetails(user);
 
+        // return new CustomUserDetails(user);
         return CustomUserDetails.mapUserToUserDetail(user);
     }
 
@@ -34,8 +34,8 @@ public class CustomUserDetailsService implements UserDetailsService {
         Users user = userRepository.findById(id).orElseThrow(
                 () -> new UsernameNotFoundException("User not found with id : " + id)
         );
-        //  return new CustomUserDetails(user);
 
+        //  return new CustomUserDetails(user);
         return CustomUserDetails.mapUserToUserDetail(user);
     }
 }

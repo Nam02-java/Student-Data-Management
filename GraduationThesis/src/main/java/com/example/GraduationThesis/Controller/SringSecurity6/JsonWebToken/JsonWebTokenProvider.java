@@ -37,7 +37,6 @@ public class JsonWebTokenProvider {
     }
 
     public Long getUserIdFromJWT(String token) {
-
         List<JWT> list = jwtService.findAll();
         String JWT_SECRET = list.get(0).getJwtSecret();
 
@@ -50,7 +49,6 @@ public class JsonWebTokenProvider {
     }
 
     public boolean validateToken(String authToken) {
-
         List<JWT> list = jwtService.findAll();
         String JWT_SECRET = list.get(0).getJwtSecret();
 
