@@ -21,6 +21,9 @@ public class Scores {
     @Column(name = "Subject_ID")
     private long Subject_ID;
 
+    @Column(name = "School_Year")
+    private String schoolYear;
+
     @Column(name = "Score_15_Min")
     private String score15Min;
 

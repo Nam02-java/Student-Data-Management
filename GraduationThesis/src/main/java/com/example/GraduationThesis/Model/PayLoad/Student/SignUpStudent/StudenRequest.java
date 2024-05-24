@@ -5,6 +5,8 @@ import com.example.GraduationThesis.Model.PayLoad.Student.SignUpStudent.Scores.S
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class StudenRequest {
 
@@ -49,7 +51,7 @@ public class StudenRequest {
     @NotBlank(message = "Partens Number phone is not empty or null")
     private String partensnumberphone;
 
-    private ScorePayload scorePayload;
+    private List<ScorePayload> scorePayloads;
 
     private ConductPayload conductPayload;
 }

@@ -22,13 +22,17 @@ public class InitializeTabScores extends JPanel {
         setLayout(new BorderLayout());
 
         // create table
-        String[] columns = {"ID", "Student Name", "Subject", "15 minutes", "1 hour", "Mid term", "Final exam", "GPA"};
+        String[] columns = {"ID", "Student Name", "Subject", "School Year", "15 minutes", "1 hour", "Mid term", "Final exam", "GPA"};
 
-        // disable editing of edit and gpa columns
         DefaultTableModel model = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return !(column == 0 || column == 1 || column == 2 || column == 7);
+
+                /**
+                 * Disable editing
+                 * Column ID score, student name, GPA are three tables that cannot be edited in the scores tab
+                 */
+                return !(column == 0 || column == 1 || column == 2 || column == 8);
             }
         };
 
@@ -64,26 +68,34 @@ public class InitializeTabScores extends JPanel {
         updateData();
     }
 
+
     public void updateData() {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         model.setRowCount(0); // delete current data in the table
 
         List<Map<String, Object>> data = TabScoresAction.Action();
         if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
-            data.forEach(row -> model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Subject"), row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA"), "Delete"}));
+            data.forEach(row -> model.addRow(new Object[]{
+                    row.get("ID"), row.get("Student Name"), row.get("Subject"),
+                    row.get("School Year"),
+                    row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA"),
+                    "Delete"}));
         } else {
-            data.forEach(row -> model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Subject"), row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA")}));
+            data.forEach(row -> model.addRow(new Object[]{
+                    row.get("ID"), row.get("Student Name"), row.get("Subject"),
+                    row.get("School Year"),
+                    row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA")}));
         }
     }
 
-
     public void deleteRecord(int rowIndex) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        model.setValueAt("", rowIndex, 3);
-        model.setValueAt("", rowIndex, 4);
-        model.setValueAt("", rowIndex, 5);
-        model.setValueAt("", rowIndex, 6);
-        model.setValueAt("0.0", rowIndex, 7);
+        model.setValueAt("", rowIndex, 3); // School Year column
+        model.setValueAt("", rowIndex, 4); // 15 minutes column
+        model.setValueAt("", rowIndex, 5); // 1 hour column
+        model.setValueAt("", rowIndex, 6); // Mid term column
+        model.setValueAt("", rowIndex, 7); // Final exam column
+        model.setValueAt("0.0", rowIndex, 8); // GPA column
     }
 
     public JTable getTable() {

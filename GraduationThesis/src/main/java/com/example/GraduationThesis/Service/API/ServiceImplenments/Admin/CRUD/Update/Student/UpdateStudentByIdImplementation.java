@@ -143,46 +143,56 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
             }
         }
 
-        // Check scores before saving to database
-        ScorePayload scorePayload = updateStudentRequest.getScorePayload();
-        if (scorePayload != null && scorePayload.getScores() != null) {
-            List<ScoreRequest> scores = scorePayload.getScores();
+        // Check scorePayloads of ScorePayload
+        List<ScorePayload> scorePayloads = updateStudentRequest.getScorePayloads();
+        if (scorePayloads != null) {
+            for (ScorePayload scorePayload : scorePayloads) {
 
-            for (ScoreRequest scoreRequest : scores) {
-                String subjectName = scoreRequest.getSubjectName();
-                List<String> scoreList = scoreRequest.getScores();
-                for (int i = 0; i < scoreList.size(); i++) {
-                    String score = scoreList.get(i);
+                String schoolYear = scorePayload.getSchoolYear();
+                System.out.println("schoolYear: " + schoolYear);
 
-                    score = score.replace(" ", "");
+                scorePayload.setSchoolYear(schoolYear);
+                System.out.println(scorePayload.getSchoolYear());
 
-                    if (score.isEmpty()) {
+
+                List<ScoreRequest> scores = scorePayload.getScores();
+                for (ScoreRequest scoreRequest : scores) {
+
+                    String subjectName = scoreRequest.getSubjectName();
+                    List<String> scoreList = scoreRequest.getScores();
+                    for (int i = 0; i < scoreList.size(); i++) {
+                        String score = scoreList.get(i);
+
+                        score = score.replace(" ", "");
+
+                        if (score.isEmpty()) {
+                            // Update score in the list
+                            scoreList.set(i, score);
+                            continue; // Skip empty scores
+                        }
+
                         // Update score in the list
                         scoreList.set(i, score);
-                        continue; // Skip empty scores
-                    }
 
-                    // Update score in the list
-                    scoreList.set(i, score);
-
-                    if (!checkValid.isValidInteger(score)) {
-                        if (i == 0) {
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score 15 minutes" + " of " + subjectName + " is not valid");
-                        } else if (i == 1) {
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score 1 hour" + " of " + subjectName + " is not valid");
-                        } else if (i == 2) {
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score mid term" + " of " + subjectName + " is not valid");
-                        } else {
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score final exam" + " of " + subjectName + " is not valid");
+                        if (!checkValid.isValidInteger(score)) {
+                            if (i == 0) {
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score 15 minutes" + " of " + subjectName + " is not valid");
+                            } else if (i == 1) {
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score 1 hour" + " of " + subjectName + " is not valid");
+                            } else if (i == 2) {
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score mid term" + " of " + subjectName + " is not valid");
+                            } else if (i == 3) {
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Score final exam" + " of " + subjectName + " is not valid");
+                            }
                         }
                     }
+                    scoreRequest.setScores(scoreList); // Update scores in the ScoreRequest
                 }
-                scoreRequest.setScores(scoreList); // Update scores in the ScoreRequest
             }
         }
 
         updateStudentInformation(student, updateStudentRequest.getUpdates());
-        updateStudentScores(student, updateStudentRequest.getScorePayload());
+        updateStudentScores(student, updateStudentRequest.getScorePayloads());
         updateStudentConduct(student, updateStudentRequest.getConductPayload());
 
         studentService.saveStudent(student);
@@ -252,19 +262,37 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
      * scores of student
      *
      * @param student
-     * @param scorePayload
+     * @param scorePayloads
      */
-    private void updateStudentScores(Student student, ScorePayload scorePayload) {
-        if (scorePayload != null && scorePayload.getScores() != null) {
-            for (ScoreRequest scoreRequest : scorePayload.getScores()) {
-                String subjectName = scoreRequest.getSubjectName();
-                List<String> scoreValues = scoreRequest.getScores();
-                student.getScores().forEach(score -> {
-                    Subjects subject = subjectService.getSubjectByName(subjectName);
-                    if (subject != null && score.getSubject_ID() == subject.getId()) {
-                        updateScoreValues(score, scoreValues);
+//    private void updateStudentScores(Student student, ScorePayload scorePayload) {
+//        if (scorePayload != null && scorePayload.getScores() != null) {
+//            for (ScoreRequest scoreRequest : scorePayload.getScores()) {
+//                String subjectName = scoreRequest.getSubjectName();
+//                List<String> scoreValues = scoreRequest.getScores();
+//                student.getScores().forEach(score -> {
+//                    Subjects subject = subjectService.getSubjectByName(subjectName);
+//                    if (subject != null && score.getSubject_ID() == subject.getId()) {
+//                        updateScoreValues(score, scoreValues);
+//                    }
+//                });
+//            }
+//        }
+//    }
+    private void updateStudentScores(Student student, List<ScorePayload> scorePayloads) {
+        if (scorePayloads != null) {
+            for (ScorePayload scorePayload : scorePayloads) {
+                if (scorePayload != null && scorePayload.getScores() != null) {
+                    for (ScoreRequest scoreRequest : scorePayload.getScores()) {
+                        String subjectName = scoreRequest.getSubjectName();
+                        List<String> scoreValues = scoreRequest.getScores();
+                        student.getScores().forEach(score -> {
+                            Subjects subject = subjectService.getSubjectByName(subjectName);
+                            if (subject != null && score.getSubject_ID() == subject.getId()) {
+                                updateScoreValues(score, scoreValues);
+                            }
+                        });
                     }
-                });
+                }
             }
         }
     }
@@ -272,11 +300,11 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
 
     private void updateScoreValues(Scores score, List<String> scoreValues) {
         if (scoreValues.size() >= 4) {
+
             score.setScore15Min(scoreValues.get(0));
             score.setScore1Hour(scoreValues.get(1));
             score.setScoreMidTerm(scoreValues.get(2));
             score.setScoreFinalExam(scoreValues.get(3));
-            //  score.setScoreOverall(scoreValues.get(4));
 
             double overallScore = scoreValues.stream()
                     .filter(s -> !s.isEmpty())
@@ -312,9 +340,9 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
 
     /**
      * conduct of student
+     *
      * @param student
-     * @param conductPayload
-     * New update at 17/5/2024
+     * @param conductPayload New update at 17/5/2024
      */
     private void updateStudentConduct(Student student, ConductPayload conductPayload) {
         if (conductPayload != null && conductPayload.getConducts() != null) {

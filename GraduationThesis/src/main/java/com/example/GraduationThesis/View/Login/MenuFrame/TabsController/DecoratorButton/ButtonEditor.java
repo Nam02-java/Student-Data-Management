@@ -19,28 +19,17 @@ import java.awt.event.ActionListener;
 public class ButtonEditor extends DefaultCellEditor {
 
     protected JButton button;
-
     private InitializeTabGeneralInformation tabGeneralInformation;
-
     private InitializeTabPosition tabPosition;
-
     private InitializeTabScores tabScores;
-
     private InitializeTabConduct tabConduct;
-
     private InitializeTabPersonalInformation tabPersonalInformation;
-
     private InitializeTabUserData tabUserData;
-
-
     private ActionType actionType;
-
     private JFrame frame;
-
     private ActionInterface deleteAction = new DeleteActionInterfaceImplements();
     private ActionInterface deleteActionTabScores = new DeleteTabScoresImplements();
     private ActionInterface deleteTabConductImplements = new DeleteTabConductImplements();
-
     private ActionInterface adminAuthorizationAction = new AdminAuthorizationImplements();
 
 

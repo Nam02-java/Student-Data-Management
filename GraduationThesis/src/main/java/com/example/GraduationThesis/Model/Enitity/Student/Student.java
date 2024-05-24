@@ -4,8 +4,6 @@ import com.example.GraduationThesis.Model.Enitity.Student.Conduct.Conduct;
 import com.example.GraduationThesis.Model.Enitity.Student.Subject.Scores;
 import jakarta.persistence.*;
 import lombok.Data;
-
-import java.util.Date;
 import java.util.List;
 
 @Entity

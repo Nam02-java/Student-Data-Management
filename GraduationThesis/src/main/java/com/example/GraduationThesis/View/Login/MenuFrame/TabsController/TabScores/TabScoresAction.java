@@ -13,6 +13,16 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.*;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.*;
+
 public class TabScoresAction {
 
     public static List<Map<String, Object>> Action() {
@@ -45,29 +55,32 @@ public class TabScoresAction {
 
             List<Map<String, Object>> result = new ArrayList<>();
             for (Map<String, Object> student : students) {
-                // Iterate through each student
+                // Lấy thông tin sinh viên
                 int studentID = (int) student.get("ID");
                 String studentName = (String) student.get("Student Name");
+                List<Map<String, String>> scoresList = (List<Map<String, String>>) student.get("Scores");
 
-                // Get the scores map
-                Map<String, String> scoresMap = (Map<String, String>) student.get("Scores");
+                for (Map<String, String> scores : scoresList) {
+                    String schoolYear = scores.get("School Year");
 
-                // Iterate through each subject and add the scores to the result
-                for (int subjectID = 1; subjectID <= 13; subjectID++) {
-                    String subjectName = getSubjectNameByID(subjectID); // Get the subject name
+                    // Lặp qua từng môn học
+                    for (int subjectID = 1; subjectID <= 13; subjectID++) {
+                        String subjectName = getSubjectNameByID(subjectID);
 
-                    // Create a new map for each subject and add it to the result list
-                    Map<String, Object> resultMap = new LinkedHashMap<>();
-                    resultMap.put("ID", studentID);
-                    resultMap.put("Student Name", studentName);
-                    resultMap.put("Subject", subjectName);
-                    resultMap.put("15 minutes", scoresMap.get(subjectName + " Score 15 Min"));
-                    resultMap.put("1 hour", scoresMap.get(subjectName + " Score 1 Hour"));
-                    resultMap.put("Mid term", scoresMap.get(subjectName + " Score Mid Term"));
-                    resultMap.put("Final exam", scoresMap.get(subjectName + " Score_Final_Exam"));
-                    resultMap.put("GPA", scoresMap.get(subjectName + " Score Overall"));
+                        // Tạo một bản đồ mới cho từng môn học
+                        Map<String, Object> resultMap = new LinkedHashMap<>();
+                        resultMap.put("ID", studentID);
+                        resultMap.put("Student Name", studentName);
+                        resultMap.put("Subject", subjectName);
+                        resultMap.put("School Year", schoolYear);
+                        resultMap.put("15 minutes", scores.get(subjectName + " Score 15 Min"));
+                        resultMap.put("1 hour", scores.get(subjectName + " Score 1 Hour"));
+                        resultMap.put("Mid term", scores.get(subjectName + " Score Mid Term"));
+                        resultMap.put("Final exam", scores.get(subjectName + " Score Final Exam"));
+                        resultMap.put("GPA", scores.get(subjectName + " Score Overall"));
 
-                    result.add(resultMap);
+                        result.add(resultMap);
+                    }
                 }
             }
 
@@ -79,9 +92,8 @@ public class TabScoresAction {
         }
     }
 
-    // Method to get subject name by ID from the database
+    // Phương thức để lấy tên môn học theo ID từ cơ sở dữ liệu
     private static String getSubjectNameByID(int subjectID) {
-
         Map<Integer, String> subjectMap = new HashMap<>();
         subjectMap.put(1, "Literature");
         subjectMap.put(2, "Math");
@@ -100,4 +112,3 @@ public class TabScoresAction {
         return subjectMap.get(subjectID);
     }
 }
-

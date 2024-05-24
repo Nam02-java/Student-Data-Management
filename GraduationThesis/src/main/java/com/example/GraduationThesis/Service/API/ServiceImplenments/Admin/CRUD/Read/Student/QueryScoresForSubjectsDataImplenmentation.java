@@ -1,5 +1,6 @@
 package com.example.GraduationThesis.Service.API.ServiceImplenments.Admin.CRUD.Read.Student;
 
+import com.example.GraduationThesis.Model.Enitity.Student.Subject.Scores;
 import com.example.GraduationThesis.Model.Enitity.Student.Subject.Subjects;
 import com.example.GraduationThesis.Service.API.InterfaceService.Admin.CRUD.Read.AdminServiceReadAPI;
 import com.example.GraduationThesis.Service.DataBase.InterfaceService.Student.StudentService;
@@ -37,24 +38,40 @@ public class QueryScoresForSubjectsDataImplenmentation implements AdminServiceRe
                     studentMap.put("ID", student.getId());
                     studentMap.put("Student Name", student.getUsername());
 
-                    // Lấy các loại điểm từ class Scores
-                    Map<String, String> scoresMap = new LinkedHashMap<>();
-                    student.getScores().forEach(score -> {
-                        Subjects subject = subjectService.getSubjectById(score.getSubject_ID());
-                        if (subject != null) {
-                            scoresMap.put(subject.getName() + " Score 15 Min", score.getScore15Min());
-                            scoresMap.put(subject.getName() + " Score 1 Hour", score.getScore1Hour());
-                            scoresMap.put(subject.getName() + " Score Mid Term", score.getScoreMidTerm());
-                            scoresMap.put(subject.getName() + " Score_Final_Exam", score.getScoreFinalExam());
-                            scoresMap.put(subject.getName() + " Score Overall", score.getScoreOverall());
-                        }
-                    });
-                    studentMap.put("Scores", scoresMap);
+                    List<Map<String, Object>> scoresListByYear = new ArrayList<>();
+
+                    student.getScores().stream()
+                            .sorted(Comparator.comparing(Scores::getSchoolYear).thenComparing(Scores::getSubject_ID))
+                            .forEach(score -> {
+                                String schoolYear = score.getSchoolYear();
+                                Subjects subject = subjectService.getSubjectById(score.getSubject_ID());
+
+                                if (subject != null) {
+                                    Map<String, Object> scoresMap = scoresListByYear.stream()
+                                            .filter(map -> schoolYear.equals(map.get("School Year")))
+                                            .findFirst()
+                                            .orElseGet(() -> {
+                                                Map<String, Object> newMap = new LinkedHashMap<>();
+                                                newMap.put("School Year", schoolYear);
+                                                scoresListByYear.add(newMap);
+                                                return newMap;
+                                            });
+
+                                    scoresMap.put(subject.getName() + " Score 15 Min", score.getScore15Min());
+                                    scoresMap.put(subject.getName() + " Score 1 Hour", score.getScore1Hour());
+                                    scoresMap.put(subject.getName() + " Score Mid Term", score.getScoreMidTerm());
+                                    scoresMap.put(subject.getName() + " Score Final Exam", score.getScoreFinalExam());
+                                    scoresMap.put(subject.getName() + " Score Overall", score.getScoreOverall());
+                                }
+                            });
+
+                    studentMap.put("Scores", scoresListByYear);
 
                     return studentMap;
                 })
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public List<Object> queryConductScoreData() {

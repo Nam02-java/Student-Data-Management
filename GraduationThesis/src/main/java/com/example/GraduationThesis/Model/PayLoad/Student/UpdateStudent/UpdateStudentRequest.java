@@ -4,6 +4,7 @@ import com.example.GraduationThesis.Model.PayLoad.Student.SignUpStudent.Conduct.
 import com.example.GraduationThesis.Model.PayLoad.Student.SignUpStudent.Scores.ScorePayload;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -23,7 +24,7 @@ public class UpdateStudentRequest {
     private String partentsname;
     private String partensnumberphone;
 
-    private ScorePayload scorePayload;
+    private List<ScorePayload> scorePayloads;
 
     private ConductPayload conductPayload;
 }

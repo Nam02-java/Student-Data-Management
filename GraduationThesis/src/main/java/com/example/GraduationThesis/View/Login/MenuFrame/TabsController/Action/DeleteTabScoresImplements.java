@@ -23,7 +23,6 @@ public class DeleteTabScoresImplements implements ActionInterface {
     @Override
     public <T> void deleteTabScores(T value, JTable table, int selectedRow) {
 
-
         DefaultTableModel model = (DefaultTableModel) table.getModel();
 
         String payload = buildPayload(model, selectedRow);
@@ -58,7 +57,7 @@ public class DeleteTabScoresImplements implements ActionInterface {
 
     private static String buildPayload(DefaultTableModel model, int selectedRow) {
         // get the subject name from the row of the table
-        Object subjectName = model.getValueAt(selectedRow, 2); // Cột tên môn học
+        Object subjectName = model.getValueAt(selectedRow, 2); // subject name column = 3
 
         // get scores from the columns "15 minutes", "1 hour", "Mid term", "Final exam"
         List<String> scoresList = new ArrayList<>();

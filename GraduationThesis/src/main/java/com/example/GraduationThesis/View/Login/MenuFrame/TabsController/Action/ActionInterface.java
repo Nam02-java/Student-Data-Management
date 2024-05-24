@@ -17,7 +17,7 @@ public interface ActionInterface {
 
     /**
      * this action for tab scores
-     * it will edit the value columns 3 4 5 6 to "" and edit too in mysql database
+     * it will edit the value columns 3 4 5 6 7 to "" and edit too in mysql database
      */
     <T> void deleteTabScores(T value, JTable table, int selectedRow);
 

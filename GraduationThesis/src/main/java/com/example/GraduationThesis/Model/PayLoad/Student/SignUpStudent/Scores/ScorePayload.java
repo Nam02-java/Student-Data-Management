@@ -6,6 +6,6 @@ import java.util.List;
 
 @Data
 public class ScorePayload {
-
+    private String schoolYear;
     private List<ScoreRequest> scores;
 }
