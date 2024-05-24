@@ -148,15 +148,22 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
         if (scorePayloads != null) {
             for (ScorePayload scorePayload : scorePayloads) {
 
-                String schoolYear = scorePayload.getSchoolYear();
-                System.out.println("schoolYear: " + schoolYear);
 
-                scorePayload.setSchoolYear(schoolYear);
-                System.out.println(scorePayload.getSchoolYear());
-
+                System.out.println("size" + scorePayloads.size());
+//                /**
+//                 * set school year
+//                 */
+//                String schoolYear = scorePayload.getSchoolYear();
+//                schoolYear.replace(" ", "");
+//                for (Scores scores : student.getScores()) {
+//                    scores.setSchoolYear(schoolYear);
+//                }
 
                 List<ScoreRequest> scores = scorePayload.getScores();
                 for (ScoreRequest scoreRequest : scores) {
+
+                    System.out.println(scores.size());
+                    System.out.println(scoreRequest.getScores().size());
 
                     String subjectName = scoreRequest.getSubjectName();
                     List<String> scoreList = scoreRequest.getScores();
@@ -187,7 +194,9 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
                         }
                     }
                     scoreRequest.setScores(scoreList); // Update scores in the ScoreRequest
+                    break;
                 }
+                break;
             }
         }
 
@@ -279,10 +288,13 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
 //        }
 //    }
     private void updateStudentScores(Student student, List<ScorePayload> scorePayloads) {
+        System.out.println("-------");
         if (scorePayloads != null) {
             for (ScorePayload scorePayload : scorePayloads) {
                 if (scorePayload != null && scorePayload.getScores() != null) {
                     for (ScoreRequest scoreRequest : scorePayload.getScores()) {
+                        System.out.println(scorePayloads.size());
+                        System.out.println(scoreRequest.getScores().size());
                         String subjectName = scoreRequest.getSubjectName();
                         List<String> scoreValues = scoreRequest.getScores();
                         student.getScores().forEach(score -> {
