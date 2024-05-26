@@ -148,8 +148,6 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
         if (scorePayloads != null) {
             for (ScorePayload scorePayload : scorePayloads) {
 
-
-                System.out.println("size" + scorePayloads.size());
 //                /**
 //                 * set school year
 //                 */
@@ -161,9 +159,6 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
 
                 List<ScoreRequest> scores = scorePayload.getScores();
                 for (ScoreRequest scoreRequest : scores) {
-
-                    System.out.println(scores.size());
-                    System.out.println(scoreRequest.getScores().size());
 
                     String subjectName = scoreRequest.getSubjectName();
                     List<String> scoreList = scoreRequest.getScores();
@@ -194,9 +189,7 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
                         }
                     }
                     scoreRequest.setScores(scoreList); // Update scores in the ScoreRequest
-                    break;
                 }
-                break;
             }
         }
 
@@ -268,8 +261,9 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
     }
 
     /**
+     * currently not in use !
+     * this is old method , don't needed ,
      * scores of student
-     *
      * @param student
      * @param scorePayloads
      */
@@ -287,46 +281,77 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
 //            }
 //        }
 //    }
+
+    /**
+     * new method
+     * apply at 26/5/2024 for scores of student
+     *
+     * @param student
+     * @param scorePayloads
+     */
     private void updateStudentScores(Student student, List<ScorePayload> scorePayloads) {
-        System.out.println("-------");
-        if (scorePayloads != null) {
-            for (ScorePayload scorePayload : scorePayloads) {
-                if (scorePayload != null && scorePayload.getScores() != null) {
-                    for (ScoreRequest scoreRequest : scorePayload.getScores()) {
-                        System.out.println(scorePayloads.size());
-                        System.out.println(scoreRequest.getScores().size());
-                        String subjectName = scoreRequest.getSubjectName();
-                        List<String> scoreValues = scoreRequest.getScores();
-                        student.getScores().forEach(score -> {
-                            Subjects subject = subjectService.getSubjectByName(subjectName);
-                            if (subject != null && score.getSubject_ID() == subject.getId()) {
-                                updateScoreValues(score, scoreValues);
-                            }
-                        });
+
+        int start = 0;
+        int end = 13;
+
+        for (ScorePayload scorePayload : scorePayloads) {
+
+            String schoolYear = scorePayload.getSchoolYear();
+
+            for (ScoreRequest scoreRequest : scorePayload.getScores()) {
+
+                String subjectName = scoreRequest.getSubjectName();
+
+                List<String> scoreValues = scoreRequest.getScores();
+
+                List<Scores> studentScores = student.getScores(); // size 39
+
+                /**
+                 * A student will have 3 years of study to follow
+                 * 3 years of study will have 13 subjects
+                 * 13 subjects will have a total of 4 points (not counting the final score)
+                 * For example: the json sent scorePayloads contains 3 years of study
+                 * Now scorePayloads has size = 3
+                 * List<Scores> studentScores, the total size is 39
+                 * 13 x 3 = 39
+                 * which 39 / 3 = 3
+                 * From there, there is a suitable sequence of numbers to go through the entire school year in scoresPayload
+                 * even if the json is only sent for 1 or 2 school years.
+                 * start += 13; -> 0 - 13 - 26
+                 * end += 13; -> 13 - 26 - 39
+                 */
+
+                for (int i = start; i < end; i++) {
+                    Scores score = studentScores.get(i);
+                    Subjects subject = subjectService.getSubjectByName(subjectName);
+                    if (subject != null && score.getSubject_ID() == subject.getId()) {
+                        updateScoreValues(score, scoreValues);
                     }
+                    updateSchoolYear(score, schoolYear);
                 }
             }
+            start += 13; // 0 - 13 - 26
+            end += 13;  // 13 - 26 - 39
         }
     }
 
-
     private void updateScoreValues(Scores score, List<String> scoreValues) {
         if (scoreValues.size() >= 4) {
-
             score.setScore15Min(scoreValues.get(0));
             score.setScore1Hour(scoreValues.get(1));
             score.setScoreMidTerm(scoreValues.get(2));
             score.setScoreFinalExam(scoreValues.get(3));
 
-            double overallScore = scoreValues.stream()
-                    .filter(s -> !s.isEmpty())
-                    .mapToInt(Integer::parseInt)
-                    .average()
-                    .orElse(0.0);
+            double overallScore = scoreValues.stream().filter(s -> !s.isEmpty()).mapToInt(Integer::parseInt).average().orElse(0.0);
 
             score.setScoreOverall(String.valueOf(overallScore));
         }
     }
+
+    private void updateSchoolYear(Scores score, String schoolYear) {
+        score.setSchoolYear(schoolYear);
+    }
+
 
     /**
      * conduct of student
