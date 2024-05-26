@@ -104,39 +104,127 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
         student.setPartentsname(studenRequest.getPartentsname());
         student.setPartensnumberphone(studenRequest.getPartensnumberphone());
 
-
         List<Scores> scoresList = new ArrayList<>();
-        for (ScorePayload scorePayload : scorePayloads) {
-            String schoolYear = scorePayload.getSchoolYear();
-            scorePayload.getScores().forEach(score -> {
-                Scores scores = new Scores();
-                Long subjectId = subjectService.findSubjectIdByName(score.getSubjectName());
+        if (scorePayloads != null) {
 
-                scores.setSubject_ID(subjectId);
+            for (ScorePayload scorePayload : scorePayloads) {
+                String schoolYear = scorePayload.getSchoolYear();
+                scorePayload.getScores().forEach(score -> {
+                    Scores scores = new Scores();
+                    Long subjectId = subjectService.findSubjectIdByName(score.getSubjectName());
 
-                // Get and save all scores from scores array
-                List<String> individualScores = score.getScores();
+                    scores.setSubject_ID(subjectId);
 
-                scores.setScore15Min(individualScores.get(0));
-                scores.setScore1Hour(individualScores.get(1));
-                scores.setScoreMidTerm(individualScores.get(2));
-                scores.setScoreFinalExam(individualScores.get(3));
+                    // Get and save all scores from scores array
+                    List<String> individualScores = score.getScores();
 
-                // calculate the final score from the subscores
-                double overallScore = individualScores.stream()
-                        .filter(s -> !s.isEmpty())
-                        .mapToInt(Integer::parseInt)
-                        .average()
-                        .orElse(0.0); // default value if no points
+                    scores.setScore15Min(individualScores.get(0));
+                    scores.setScore1Hour(individualScores.get(1));
+                    scores.setScoreMidTerm(individualScores.get(2));
+                    scores.setScoreFinalExam(individualScores.get(3));
 
-                // save the summary score to the Scores object
-                scores.setScoreOverall(String.valueOf(overallScore));
+                    // calculate the final score from the subscores
+                    double overallScore = individualScores.stream()
+                            .filter(s -> !s.isEmpty())
+                            .mapToInt(Integer::parseInt)
+                            .average()
+                            .orElse(0.0); // default value if no points
 
-                scores.setSchoolYear(schoolYear);
-                scores.setStudent(student);
+                    // save the summary score to the Scores object
+                    scores.setScoreOverall(String.valueOf(overallScore));
 
-                scoresList.add(scores);
-            });
+                    scores.setSchoolYear(schoolYear);
+                    scores.setStudent(student);
+
+                    scoresList.add(scores);
+                });
+            }
+
+            if (scorePayloads.size() < 3) {
+                for (ScorePayload scorePayload : scorePayloads) {
+                    while (scoresList.size() != 39) {
+                        String schoolYear = "";
+                        scorePayload.getScores().forEach(score -> {
+                            Scores scores = new Scores();
+                            Long subjectId = subjectService.findSubjectIdByName(score.getSubjectName());
+
+                            scores.setSubject_ID(subjectId);
+
+                            scores.setScore15Min("");
+                            scores.setScore1Hour("");
+                            scores.setScoreMidTerm("");
+                            scores.setScoreFinalExam("");
+
+                            double overallScore = 0.0;
+                            scores.setScoreOverall(String.valueOf(overallScore));
+
+                            scores.setSchoolYear(schoolYear);
+                            scores.setStudent(student);
+
+                            scoresList.add(scores);
+                        });
+                    }
+                }
+            }
+        } else {
+            scorePayloads = new ArrayList<>();
+
+            // Create default empty ScorePayload
+            for (int i = 0; i < 3; i++) {
+                ScorePayload defaultScorePayload = new ScorePayload();
+                defaultScorePayload.setSchoolYear("");
+                defaultScorePayload.setScores(new ArrayList<>());
+
+                ArrayList<String> subjectNames = new ArrayList<>();
+                subjectNames.add("Literature"); // ID 1
+                subjectNames.add("Math"); // ID 2
+                subjectNames.add("English"); // ID 3
+                subjectNames.add("History"); // ID 4
+                subjectNames.add("Geography"); // ID 5
+                subjectNames.add("Physics"); // ID 6
+                subjectNames.add("Chemistry"); // ID 7
+                subjectNames.add("Biology"); // ID 8
+                subjectNames.add("Citizen_Education"); // ID 9
+                subjectNames.add("National_Defense_And_Security_Education"); // ID 10
+                subjectNames.add("Technology"); // ID 11
+                subjectNames.add("Information_Technology"); // ID 12
+                subjectNames.add("Physical_Education"); // ID 13
+
+                for (int j = 0; j < 13; j++) {
+                    ScoreRequest defaultScoreRequest = new ScoreRequest();
+                    defaultScoreRequest.setSubjectName(subjectNames.get(j));
+                    List<String> defaultScores = Arrays.asList("", "", "", "");
+                    defaultScoreRequest.setScores(defaultScores);
+                    defaultScorePayload.getScores().add(defaultScoreRequest);
+                }
+
+                scorePayloads.add(defaultScorePayload);
+
+                for (ScorePayload scorePayload : scorePayloads) {
+                    while (scoresList.size() != 39) {
+                        String schoolYear = "";
+                        scorePayload.getScores().forEach(score -> {
+                            Scores scores = new Scores();
+                            Long subjectId = subjectService.findSubjectIdByName(score.getSubjectName());
+
+                            scores.setSubject_ID(subjectId);
+
+                            scores.setScore15Min("");
+                            scores.setScore1Hour("");
+                            scores.setScoreMidTerm("");
+                            scores.setScoreFinalExam("");
+
+                            double overallScore = 0.0;
+                            scores.setScoreOverall(String.valueOf(overallScore));
+
+                            scores.setSchoolYear(schoolYear);
+                            scores.setStudent(student);
+
+                            scoresList.add(scores);
+                        });
+                    }
+                }
+            }
         }
 
         // Sort the score list List by school year and subject code
