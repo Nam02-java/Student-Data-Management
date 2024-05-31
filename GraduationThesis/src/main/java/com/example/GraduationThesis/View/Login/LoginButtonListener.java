@@ -12,7 +12,6 @@ import com.google.gson.reflect.TypeToken;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -37,7 +36,6 @@ public class LoginButtonListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
-
 
         if ("Enter username".equals(username)) {
             JOptionPane.showMessageDialog(jFrame, "username can not be null");

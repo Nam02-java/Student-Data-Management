@@ -3,6 +3,7 @@ package com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.AddNewStuden
 
 import com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.AddNewStudent.Button.SubmitButtonListener;
 import com.example.GraduationThesis.View.Login.MenuFrame.MenuFrame;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
@@ -19,13 +20,17 @@ public class AddNewStudentFrame extends JFrame {
     private JTextField teachernameField;
     private JTextField partentsnameField;
     private JTextField partensnumberphoneField;
-    private ArrayList<JTextField[]> scoreFields;
+    private ArrayList<JTextField> schoolYearList;
+    private JTextField schoolYearField;
+    private ArrayList<JTextField[]> scoreFields1;
+    private ArrayList<JTextField[]> scoreFields2;
+    private ArrayList<JTextField[]> scoreFields3;
     private ArrayList<JTextField[]> conductFieldsList;
     private MenuFrame menuFrame;
 
-
     public AddNewStudentFrame(MenuFrame menuFrame) {
         this.menuFrame = menuFrame;
+
         // Create labels and text fields for personal information
         JLabel usernameLabel = new JLabel("Username:");
         usernameField = new JTextField(20);
@@ -71,33 +76,11 @@ public class AddNewStudentFrame extends JFrame {
         personalInfoPanel.add(partensnumberphoneLabel);
         personalInfoPanel.add(partensnumberphoneField);
 
-        // Create a panel for scores
-        JPanel scoresPanel = new JPanel(new GridLayout(14, 6));
-        JLabel subjectLabel = new JLabel("Subject");
-        scoresPanel.add(subjectLabel);
-        JLabel fifteenLabel = new JLabel("15 minutes");
-        scoresPanel.add(fifteenLabel);
-        JLabel oneHourLabel = new JLabel("1 hour");
-        scoresPanel.add(oneHourLabel);
-        JLabel midTermLabel = new JLabel("Midterm");
-        scoresPanel.add(midTermLabel);
-        JLabel finalTermLabel = new JLabel("Final term");
-        scoresPanel.add(finalTermLabel);
-
-        scoreFields = new ArrayList<>();
-        String[] subjects = {"Literature", "Math", "English", "History", "Geography", "Physics", "Chemistry", "Biology", "Citizen_Education", "National_Defense_And_Security_Education", "Technology", "Information_Technology", "Physical_Education"};
-
-        for (String subject : subjects) {
-            JLabel subjectNameLabel = new JLabel(subject);
-            scoresPanel.add(subjectNameLabel);
-
-            JTextField[] fields = new JTextField[4];
-            for (int i = 0; i < 4; i++) {
-                fields[i] = new JTextField(3);
-                scoresPanel.add(fields[i]);
-            }
-            scoreFields.add(fields);
-        }
+        // Create panels for scores
+        schoolYearList = new ArrayList<>();
+        JPanel firstYearScoresPanel = createScoresPanel("First Year", scoreFields1);
+        JPanel secondYearScoresPanel = createScoresPanel("Second Year", scoreFields2);
+        JPanel thirdYearScoresPanel = createScoresPanel("Third Year", scoreFields3);
 
         // Create a panel for conduct
         JPanel conductPanel = new JPanel(new GridLayout(4, 4));
@@ -117,7 +100,6 @@ public class AddNewStudentFrame extends JFrame {
 
         String[] yearLabels = {"First", "Second", "Third"};
         for (String yearLabel : yearLabels) {
-
             JLabel year = new JLabel(yearLabel + " School Year:");
             JTextField schoolYearTextField = new JTextField(20);
             JTextField conductTextField = new JTextField(20);
@@ -134,18 +116,27 @@ public class AddNewStudentFrame extends JFrame {
 
         // Create a submit button
         JButton submitButton = new JButton("Submit");
-        submitButton.addActionListener(new SubmitButtonListener(menuFrame, this, usernameField, classnameField, emailField, dateOfBirthField, numberphoneField, addressField, positionField, teachernameField, partentsnameField, partensnumberphoneField, scoreFields, conductFieldsList));
+        submitButton.addActionListener(new SubmitButtonListener(menuFrame, this, usernameField, classnameField, emailField, dateOfBirthField, numberphoneField, addressField, positionField, teachernameField, partentsnameField, partensnumberphoneField, schoolYearField, schoolYearList, scoreFields1, scoreFields2, scoreFields3, conductFieldsList));
 
-        // Create the main panel
+        // Create the main panel and add scroll pane
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.add(personalInfoPanel);
-        mainPanel.add(scoresPanel);
+        mainPanel.add(firstYearScoresPanel);
+        mainPanel.add(Box.createVerticalStrut(20)); // Add spacing
+        mainPanel.add(secondYearScoresPanel);
+        mainPanel.add(Box.createVerticalStrut(20)); // Add spacing
+        mainPanel.add(thirdYearScoresPanel);
+        mainPanel.add(Box.createVerticalStrut(20)); // Add spacing
         mainPanel.add(conductPanel);
         mainPanel.add(submitButton);
 
+        JScrollPane scrollPane = new JScrollPane(mainPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
         // Add the main panel to the frame
-        add(mainPanel);
+        add(scrollPane);
 
         setTitle("Student Information Form");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Close this window without affecting the MenuFrame
@@ -153,4 +144,64 @@ public class AddNewStudentFrame extends JFrame {
         requestFocusInWindow();
         setVisible(true);
     }
+
+    private JPanel createScoresPanel(String year, ArrayList<JTextField[]> scoreFields) {
+        JPanel scoresPanel = new JPanel();
+        scoresPanel.setLayout(new BoxLayout(scoresPanel, BoxLayout.Y_AXIS));
+
+        JLabel yearLabel = new JLabel(year + " Scores");
+        scoresPanel.add(yearLabel);
+
+        JPanel scoresGrid = new JPanel(new GridLayout(15, 5)); // Adjusted to 15 rows
+
+        // Add school year input at the top
+        JLabel schoolYearLabel = new JLabel("School Year:");
+        schoolYearField = new JTextField(10);
+        schoolYearList.add(schoolYearField);
+
+        scoresGrid.add(schoolYearLabel);
+        scoresGrid.add(schoolYearField);
+        for (int i = 0; i < 3; i++) {
+            scoresGrid.add(new JLabel()); // Add empty labels for alignment
+        }
+
+        String[] columnHeaders = {"Subject", "15 minutes", "1 hour", "Midterm", "Final term"};
+        for (String columnHeader : columnHeaders) {
+            scoresGrid.add(new JLabel(columnHeader));
+        }
+
+        // Add scoreFields to the appropriate list based on the year
+        if (year.equals("First Year")) {
+            scoreFields1 = new ArrayList<>();
+        } else if (year.equals("Second Year")) {
+            scoreFields2 = new ArrayList<>();
+        } else if (year.equals("Third Year")) {
+            scoreFields3 = new ArrayList<>();
+        }
+
+        String[] subjects = {"Literature", "Math", "English", "History", "Geography", "Physics", "Chemistry", "Biology", "Citizen Education", "National Defense And Security Education", "Technology", "Information Technology", "Physical Education"};
+
+        for (String subject : subjects) {
+            scoresGrid.add(new JLabel(subject));
+
+            JTextField[] fields = new JTextField[4];
+            for (int i = 0; i < 4; i++) {
+                fields[i] = new JTextField(3);
+                scoresGrid.add(fields[i]);
+            }
+
+            // Add fields to the appropriate scoreFields list
+            if (year.equals("First Year")) {
+                scoreFields1.add(fields);
+            } else if (year.equals("Second Year")) {
+                scoreFields2.add(fields);
+            } else if (year.equals("Third Year")) {
+                scoreFields3.add(fields);
+            }
+        }
+
+        scoresPanel.add(scoresGrid);
+        return scoresPanel;
+    }
 }
+

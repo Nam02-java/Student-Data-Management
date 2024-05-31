@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 @Service("RegisterStudentImplementation")
@@ -40,8 +41,45 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
 
         // Check scores before saving to database
         if (scorePayloads != null) {
+
+            //Counting variable to serve the control of school year input
+            int count = 0;
+
             for (ScorePayload scorePayload : scorePayloads) {
+
+                count += 1;
+                if (scorePayload.getSchoolYear() == null) {
+                    switch (count) {
+                        case 1:
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School year value at first year scores can not be null");
+                        case 2:
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School year value at second year scores can not be null");
+                        case 3:
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School year value at third year scores can not be null");
+                    }
+                }
                 String schoolYear = scorePayload.getSchoolYear();
+                schoolYear.replace(" ", "");
+                if (schoolYear.isEmpty()) {
+                    switch (count) {
+                        case 1:
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School year value at first year scores is not valid");
+                        case 2:
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School year value at second year scores is not valid");
+                        case 3:
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School year value at third year scores is not valid");
+                    }
+                }
+
+                for (int i = 0; i < scorePayloads.size(); i++) {
+                    for (int j = i + 1; j < scorePayloads.size(); j++) {
+                        if (scorePayloads.get(i).getSchoolYear().replace(" ", "").equals(scorePayloads.get(j).getSchoolYear().replace(" ", ""))) {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School years overlap");
+                        }
+                    }
+                }
+
+
                 List<ScoreRequest> scores = scorePayload.getScores();
 
                 for (ScoreRequest scoreRequest : scores) {
@@ -106,7 +144,6 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
 
         List<Scores> scoresList = new ArrayList<>();
         if (scorePayloads != null) {
-
             for (ScorePayload scorePayload : scorePayloads) {
                 String schoolYear = scorePayload.getSchoolYear();
                 scorePayload.getScores().forEach(score -> {
@@ -124,11 +161,7 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
                     scores.setScoreFinalExam(individualScores.get(3));
 
                     // calculate the final score from the subscores
-                    double overallScore = individualScores.stream()
-                            .filter(s -> !s.isEmpty())
-                            .mapToInt(Integer::parseInt)
-                            .average()
-                            .orElse(0.0); // default value if no points
+                    double overallScore = individualScores.stream().filter(s -> !s.isEmpty()).mapToInt(Integer::parseInt).average().orElse(0.0); // default value if no points
 
                     // save the summary score to the Scores object
                     scores.setScoreOverall(String.valueOf(overallScore));
@@ -143,7 +176,18 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
             if (scorePayloads.size() < 3) {
                 for (ScorePayload scorePayload : scorePayloads) {
                     while (scoresList.size() != 39) {
-                        String schoolYear = "";
+                        String schoolYear = null;
+                        switch (scoresList.size()) {
+                            case 13:
+                                schoolYear = "Second year";
+                                break;
+                            case 26:
+                                schoolYear = "Third year";
+                                break;
+                        }
+
+                        String finalSchoolYearResult = schoolYear;
+
                         scorePayload.getScores().forEach(score -> {
                             Scores scores = new Scores();
                             Long subjectId = subjectService.findSubjectIdByName(score.getSubjectName());
@@ -158,7 +202,7 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
                             double overallScore = 0.0;
                             scores.setScoreOverall(String.valueOf(overallScore));
 
-                            scores.setSchoolYear(schoolYear);
+                            scores.setSchoolYear(finalSchoolYearResult);
                             scores.setStudent(student);
 
                             scoresList.add(scores);
@@ -172,7 +216,18 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
             // Create default empty ScorePayload
             for (int i = 0; i < 3; i++) {
                 ScorePayload defaultScorePayload = new ScorePayload();
-                defaultScorePayload.setSchoolYear("");
+                switch (i) {
+                    case 0:
+                        defaultScorePayload.setSchoolYear("First Year");
+                        break;
+                    case 1:
+                        defaultScorePayload.setSchoolYear("Second Year");
+                        break;
+                    case 2:
+                        defaultScorePayload.setSchoolYear("Third Year");
+                        break;
+                }
+
                 defaultScorePayload.setScores(new ArrayList<>());
 
                 ArrayList<String> subjectNames = new ArrayList<>();
@@ -199,58 +254,110 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
                 }
 
                 scorePayloads.add(defaultScorePayload);
+            }
 
-                for (ScorePayload scorePayload : scorePayloads) {
-                    while (scoresList.size() != 39) {
-                        String schoolYear = "";
-                        scorePayload.getScores().forEach(score -> {
-                            Scores scores = new Scores();
-                            Long subjectId = subjectService.findSubjectIdByName(score.getSubjectName());
+            // add scores items to scoresList in order from 1 to 13
+            for (ScorePayload scorePayload : scorePayloads) {
+                String schoolYear = scorePayload.getSchoolYear();
+                scorePayload.getScores().forEach(score -> {
+                    Scores scores = new Scores();
+                    Long subjectId = subjectService.findSubjectIdByName(score.getSubjectName());
 
-                            scores.setSubject_ID(subjectId);
+                    scores.setSubject_ID(subjectId);
 
-                            scores.setScore15Min("");
-                            scores.setScore1Hour("");
-                            scores.setScoreMidTerm("");
-                            scores.setScoreFinalExam("");
+                    scores.setScore15Min("");
+                    scores.setScore1Hour("");
+                    scores.setScoreMidTerm("");
+                    scores.setScoreFinalExam("");
 
-                            double overallScore = 0.0;
-                            scores.setScoreOverall(String.valueOf(overallScore));
+                    double overallScore = 0.0;
+                    scores.setScoreOverall(String.valueOf(overallScore));
 
-                            scores.setSchoolYear(schoolYear);
-                            scores.setStudent(student);
+                    scores.setSchoolYear(schoolYear);
+                    scores.setStudent(student);
 
-                            scoresList.add(scores);
-                        });
-                    }
-                }
+                    scoresList.add(scores);
+                });
             }
         }
 
-        // Sort the score list List by school year and subject code
+        // Sort the score list by school year and subject code
         Collections.sort(scoresList, Comparator.comparing(Scores::getSchoolYear).thenComparing(Scores::getSubject_ID));
 
         student.setScores(scoresList);
 
+        AtomicInteger count = new AtomicInteger();
         List<Conduct> conductList = new ArrayList<>();
-        conductPayload.getConducts().forEach(conduct -> {
-            Conduct conducts = new Conduct();
-            List<String> individualScores = conduct.getConduct();
-            conducts.setSchool_year(individualScores.size() > 0 ? individualScores.get(0) : "");
-            conducts.setConduct(individualScores.size() > 1 ? individualScores.get(1) : "");
-            conducts.setAttendance_Score(individualScores.size() > 2 ? individualScores.get(2) : "");
-            conducts.setStudent(student);
-            conductList.add(conducts);
-        });
+        if (conductPayload != null) {
+            conductPayload.getConducts().forEach(conduct -> {
+                Conduct conducts = new Conduct();
+                List<String> individualScores = conduct.getConduct();
 
-        // Add empty elements if needed
-        while (conductList.size() < 3) {
-            Conduct emptyConduct = new Conduct();
-            emptyConduct.setSchool_year("");
-            emptyConduct.setConduct("");
-            emptyConduct.setAttendance_Score("");
-            emptyConduct.setStudent(student);
-            conductList.add(emptyConduct);
+                count.addAndGet(1);
+                if (individualScores.get(0) == null || individualScores.get(0).isEmpty()) {
+                    System.out.println(conducts.getSchool_year());
+                    switch (count.get()) {
+                        case 1:
+                            conducts.setSchool_year("First Year");
+                            break;
+                        case 2:
+                            conducts.setSchool_year("Second Year");
+                            break;
+                        case 3:
+                            conducts.setSchool_year("Third Year");
+                            break;
+                    }
+                } else {
+                    conducts.setSchool_year(individualScores.size() > 0 ? individualScores.get(0) : "");
+                }
+                conducts.setConduct(individualScores.size() > 1 ? individualScores.get(1) : "");
+                conducts.setAttendance_Score(individualScores.size() > 2 ? individualScores.get(2) : "");
+                conducts.setStudent(student);
+                conductList.add(conducts);
+            });
+
+            // Add empty elements if needed
+            while (conductList.size() < 3) {
+
+                Conduct emptyConduct = new Conduct();
+
+                switch (conductList.size()) {
+                    case 0:
+                        emptyConduct.setSchool_year("First Year");
+                        break;
+                    case 1:
+                        emptyConduct.setSchool_year("Second Year");
+                        break;
+                    case 2:
+                        emptyConduct.setSchool_year("Third Year");
+                        break;
+                }
+
+                emptyConduct.setConduct("");
+                emptyConduct.setAttendance_Score("");
+                emptyConduct.setStudent(student);
+                conductList.add(emptyConduct);
+            }
+
+        } else {
+            for (int i = 0; i < 3; i++) {
+                Conduct emptyConduct = new Conduct();
+                switch (i) {
+                    case 0:
+                        emptyConduct.setSchool_year("First Year");
+                        break;
+                    case 1:
+                        emptyConduct.setSchool_year("Second Year");
+                        break;
+                    case 2:
+                        emptyConduct.setSchool_year("Third Year");
+                        break;
+                }
+                emptyConduct.setConduct("");
+                emptyConduct.setAttendance_Score("");
+                emptyConduct.setStudent(student);
+                conductList.add(emptyConduct);
+            }
         }
 
         student.setConducts(conductList);
@@ -264,5 +371,4 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
     public ResponseEntity<?> adminAuthorization(String numberphone) {
         return null;
     }
-
 }

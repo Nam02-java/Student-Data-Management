@@ -18,6 +18,7 @@ public class LoginFrame extends JFrame {
         JTextField textField1 = createTextFieldWithPlaceholder("Enter username");
         JPasswordField passwordField = createPasswordFieldWithPlaceholder("Enter password");
 
+
         JButton loginButton = new JButton("Login");
         loginButton.setBounds(135, 150, 100, 25);
         loginButton.addActionListener(new LoginButtonListener(textField1, passwordField, this));

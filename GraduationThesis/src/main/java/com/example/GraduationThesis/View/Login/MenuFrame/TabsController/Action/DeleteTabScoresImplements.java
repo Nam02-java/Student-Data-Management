@@ -55,31 +55,126 @@ public class DeleteTabScoresImplements implements ActionInterface {
     }
 
 
+    /**
+     * no needed
+     * this is old method
+     * @param model
+     * @param selectedRow
+     * @return
+     */
+//    private static String buildPayload(DefaultTableModel model, int selectedRow) {
+//        // get the subject name from the row of the table
+//        Object subjectName = model.getValueAt(selectedRow, 2); // subject name column = 2
+//
+//        // get scores from the columns "School year", "15 minutes", "1 hour", "Mid term", "Final exam"
+//        List<String> scoresList = new ArrayList<>();
+//        for (int i = 3; i <= 7; i++) {
+//            Object score = model.getValueAt(selectedRow, i);
+//            if (score == "") {
+//                scoresList.add("\"\"");
+//            }
+//        }
+//
+//        // build payload JSON
+//        StringBuilder payloadBuilder = new StringBuilder();
+//        payloadBuilder.append("{");
+//        payloadBuilder.append("\"userId\": ").append(model.getValueAt(selectedRow, 0)).append(",");
+//        payloadBuilder.append("\"scorePayload\": {");
+//        payloadBuilder.append("\"scores\": [");
+//        payloadBuilder.append("{");
+//        payloadBuilder.append("\"subjectName\": \"").append(subjectName).append("\",");
+//        payloadBuilder.append("\"scores\": ").append(scoresList);
+//        payloadBuilder.append("}");
+//        payloadBuilder.append("]");
+//        payloadBuilder.append("}");
+//        payloadBuilder.append("}");
+//        return payloadBuilder.toString();
+//    }
+
+    /**
+     * new method to build payload
+     * code by namjava02 at 28/5/24
+     * @param model
+     * @param selectedRow
+     * @return
+     */
     private static String buildPayload(DefaultTableModel model, int selectedRow) {
         // get the subject name from the row of the table
-        Object subjectName = model.getValueAt(selectedRow, 2); // subject name column = 3
+        Object studentId = model.getValueAt(selectedRow, 0); // subject name column = 2
 
-        // get scores from the columns "15 minutes", "1 hour", "Mid term", "Final exam"
+        // get scores from the columns "School year", "15 minutes", "1 hour", "Mid term", "Final exam"
         List<String> scoresList = new ArrayList<>();
-        for (int i = 3; i <= 6; i++) {
-            Object score = model.getValueAt(selectedRow, i);
-            if (score == "") {
-                scoresList.add("\"\"");
+
+        List<String> schoolYearList = new ArrayList<>();
+
+        for (int i = 0; i < model.getRowCount(); i++) {
+            Object presentId = model.getValueAt(i, 0);
+            if (studentId.equals(presentId)) {
+
+                Object subjectName = model.getValueAt(i, 2);
+                if (subjectName.equals("Literature")) {
+                    Object schoolYear = model.getValueAt(i, 3);
+                    schoolYearList.add("\"" + schoolYear.toString() + "\""); // Add quotes to the value
+                }
+
+                for (int j = 4; j <= 7; j++) {
+                    Object score = model.getValueAt(i, j);
+                    if (score == "") {
+                        scoresList.add("\"\"");
+                        continue;
+                    }
+                    scoresList.add("\"" + score.toString() + "\""); // Add quotes to the value
+                }
             }
         }
 
         // build payload JSON
         StringBuilder payloadBuilder = new StringBuilder();
         payloadBuilder.append("{");
-        payloadBuilder.append("\"userId\": ").append(model.getValueAt(selectedRow, 0)).append(",");
-        payloadBuilder.append("\"scorePayload\": {");
-        payloadBuilder.append("\"scores\": [");
-        payloadBuilder.append("{");
-        payloadBuilder.append("\"subjectName\": \"").append(subjectName).append("\",");
-        payloadBuilder.append("\"scores\": ").append(scoresList);
-        payloadBuilder.append("}");
+        payloadBuilder.append("\"userId\": ").append(studentId).append(",");
+        payloadBuilder.append("\"scorePayloads\": [");
+
+        int numSubjects = 13; // Fixed number of subjects for consistency
+        int expectedScoresPerYear = numSubjects * 4;
+
+        for (int i = 0; i < schoolYearList.size(); i++) {
+            if (i > 0) {
+                payloadBuilder.append(",");
+            }
+            payloadBuilder.append("{");
+            payloadBuilder.append("\"schoolYear\": ").append(schoolYearList.get(i)).append(",");
+            payloadBuilder.append("\"scores\": [");
+
+            for (int j = 0; j < numSubjects; j++) {
+                if (j > 0) {
+                    payloadBuilder.append(",");
+                }
+                int subjectIndex = j;
+                Object subjectName = model.getValueAt(subjectIndex, 2);
+                payloadBuilder.append("{");
+                payloadBuilder.append("\"subjectName\": \"").append(subjectName).append("\",");
+                payloadBuilder.append("\"scores\": [");
+
+                for (int k = 0; k < 4; k++) {
+                    if (k > 0) {
+                        payloadBuilder.append(",");
+                    }
+                    int scoreIndex = i * expectedScoresPerYear + j * 4 + k;
+                    if (scoreIndex < scoresList.size()) {
+                        payloadBuilder.append(scoresList.get(scoreIndex));
+                    } else {
+                        payloadBuilder.append("\"\"");
+                    }
+                }
+                payloadBuilder.append("]");
+                payloadBuilder.append("}");
+            }
+
+            payloadBuilder.append("]");
+            payloadBuilder.append("}");
+        }
+
         payloadBuilder.append("]");
-        payloadBuilder.append("}");
         payloadBuilder.append("}");
         return payloadBuilder.toString();
     }

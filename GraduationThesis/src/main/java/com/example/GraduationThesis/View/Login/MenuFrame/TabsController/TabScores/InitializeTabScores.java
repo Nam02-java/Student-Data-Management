@@ -7,6 +7,7 @@ import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.Decorato
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ButtonRenderer;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
@@ -24,10 +25,14 @@ public class InitializeTabScores extends JPanel {
         // create table
         String[] columns = {"ID", "Student Name", "Subject", "School Year", "15 minutes", "1 hour", "Mid term", "Final exam", "GPA"};
 
+
         DefaultTableModel model = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-
+                // Only allow editing in School Year column for specified rows
+                if (column == 3) {
+                    return row % 13 == 0;
+                }
                 /**
                  * Disable editing
                  * Column ID score, student name, GPA are three tables that cannot be edited in the scores tab
@@ -36,7 +41,9 @@ public class InitializeTabScores extends JPanel {
             }
         };
 
+
         table = new JTable(model);
+
 
         table.setEnabled(false);
 
@@ -86,11 +93,34 @@ public class InitializeTabScores extends JPanel {
                     row.get("School Year"),
                     row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA")}));
         }
+        highlightSchoolYearColumn();
+
     }
+
+    private void highlightSchoolYearColumn() {
+        table.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component cell = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+                // Color rows 0, 13, 26, 39, etc.
+                if (row % 13 == 0) {
+                    cell.setBackground(Color.RED);
+                    cell.setForeground(Color.WHITE);
+                } else {
+                    // Reset to default colors if not the specified rows
+                    cell.setBackground(table.getBackground());
+                    cell.setForeground(table.getForeground());
+                }
+
+                return cell;
+            }
+        });
+    }
+
 
     public void deleteRecord(int rowIndex) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        model.setValueAt("", rowIndex, 3); // School Year column
         model.setValueAt("", rowIndex, 4); // 15 minutes column
         model.setValueAt("", rowIndex, 5); // 1 hour column
         model.setValueAt("", rowIndex, 6); // Mid term column

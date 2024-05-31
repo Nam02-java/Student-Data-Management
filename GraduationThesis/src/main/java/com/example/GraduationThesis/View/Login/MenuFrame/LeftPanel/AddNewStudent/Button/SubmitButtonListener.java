@@ -15,6 +15,7 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class SubmitButtonListener implements ActionListener {
     private JTextField usernameField;
     private JTextField classnameField;
@@ -26,16 +27,19 @@ public class SubmitButtonListener implements ActionListener {
     private JTextField teachernameField;
     private JTextField partentsnameField;
     private JTextField partensnumberphoneField;
-    private ArrayList<JTextField[]> scoreFields;
+    private JTextField schoolYearField;
+    private ArrayList<JTextField> schoolYearList;
+    private ArrayList<JTextField[]> scoreFields1;
+    private ArrayList<JTextField[]> scoreFields2;
+    private ArrayList<JTextField[]> scoreFields3;
     private ArrayList<JTextField[]> conductFieldsList;
-
-
     private JFrame jFrame;
     private MenuFrame menuFrame;
     private String[] subjects = {"Literature", "Math", "English", "History", "Geography", "Physics", "Chemistry", "Biology", "Citizen_Education", "National_Defense_And_Security_Education", "Technology", "Information_Technology", "Physical_Education"};
     private final List<String> fieldsToCheck = new ArrayList<>();
 
-    public SubmitButtonListener(MenuFrame menuFrame, JFrame jFrame, JTextField usernameField, JTextField classnameField, JTextField emailField, JTextField dateOfBirthField, JTextField numberphoneField, JTextField addressField, JTextField positionField, JTextField teachernameField, JTextField partentsnameField, JTextField partensnumberphoneField, ArrayList<JTextField[]> scoreFields, ArrayList<JTextField[]> conductFieldsList) {
+
+    public SubmitButtonListener(MenuFrame menuFrame, JFrame jFrame, JTextField usernameField, JTextField classnameField, JTextField emailField, JTextField dateOfBirthField, JTextField numberphoneField, JTextField addressField, JTextField positionField, JTextField teachernameField, JTextField partentsnameField, JTextField partensnumberphoneField, JTextField schoolYearField, ArrayList<JTextField> schoolYearList, ArrayList<JTextField[]> scoreFields1, ArrayList<JTextField[]> scoreFields2, ArrayList<JTextField[]> scoreFields3, ArrayList<JTextField[]> conductFieldsList) {
         this.menuFrame = menuFrame;
         this.jFrame = jFrame;
         this.usernameField = usernameField;
@@ -48,22 +52,21 @@ public class SubmitButtonListener implements ActionListener {
         this.teachernameField = teachernameField;
         this.partentsnameField = partentsnameField;
         this.partensnumberphoneField = partensnumberphoneField;
-        this.scoreFields = scoreFields;
+        this.schoolYearField = schoolYearField;
+        this.schoolYearList = schoolYearList;
+        this.scoreFields1 = scoreFields1;
+        this.scoreFields2 = scoreFields2;
+        this.scoreFields3 = scoreFields3;
         this.conductFieldsList = conductFieldsList;
-
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-
         callAPI();
-
     }
 
-
     public void callAPI() {
-
-        // Get data from JTextField fields
+        //Get data from JTextField fields
         String username = usernameField.getText();
         String classname = classnameField.getText();
         String email = emailField.getText();
@@ -75,7 +78,8 @@ public class SubmitButtonListener implements ActionListener {
         String partentsname = partentsnameField.getText();
         String partensnumberphone = partensnumberphoneField.getText();
 
-        // Create a Json Object to represent the data
+
+        // Create a JsonObject to represent the data
         JsonObject requestBody = new JsonObject();
         requestBody.addProperty("username", username);
         requestBody.addProperty("classname", classname);
@@ -88,52 +92,32 @@ public class SubmitButtonListener implements ActionListener {
         requestBody.addProperty("partentsname", partentsname);
         requestBody.addProperty("partensnumberphone", partensnumberphone);
 
-        // Create a Json Object to represent the Payload score
-        JsonObject scorePayload = new JsonObject();
-        JsonArray scoresArray = new JsonArray();
+        // Create a JsonArray to represent the scorePayloads
+        JsonArray scorePayloadsArray = new JsonArray();
 
-        // Loop through the Fields scores and add them to the scores Array
-        for (int i = 0; i < scoreFields.size(); i++) {
-            String subject = subjects[i];
-            JTextField[] fields = scoreFields.get(i);
+        // Get data from scoreFields for each academic year
+        JsonObject year1Scores = getScoresData(0, scoreFields1);
+        JsonObject year2Scores = getScoresData(1, scoreFields2);
+        JsonObject year3Scores = getScoresData(2, scoreFields3);
 
-            String fifteenMinutes = fields[0].getText();
-            String oneHour = fields[1].getText();
-            String midTerm = fields[2].getText();
-            String finalTerm = fields[3].getText();
 
-            JsonObject scoreObject = new JsonObject();
-            scoreObject.addProperty("subjectName", subject);
-            JsonArray scores = new JsonArray();
+        // Add data for each academic year to scorePayloadsArray
+        scorePayloadsArray.add(year1Scores);
+        scorePayloadsArray.add(year2Scores);
+        scorePayloadsArray.add(year3Scores);
 
-            /**
-             * if text = null -> text = "0"
-             */
-            for (JTextField field : fields) {
-                String fieldValue = field.getText().isEmpty() ? "" : field.getText();
-                scores.add(fieldValue);
-            }
+        requestBody.add("scorePayloads", scorePayloadsArray);
 
-            scores.add(fifteenMinutes);
-            scores.add(oneHour);
-            scores.add(midTerm);
-            scores.add(finalTerm);
-
-            scoreObject.add("scores", scores);
-
-            scoresArray.add(scoreObject);
-        }
-        scorePayload.add("scores", scoresArray);
-
-        // Create a JsonObject object to represent conductPayload
+        // Create a JsonObject to represent conductPayload
         JsonObject conductPayload = new JsonObject();
         JsonArray conductsArray = new JsonArray();
 
-        // Loop through conductFieldsList to get conduct data for each year
+        // Loop through conductFieldsList to get conduct data for each academic year
         for (JTextField[] conductFields : conductFieldsList) {
-
             JsonObject conductObject = new JsonObject();
             JsonArray conductArray = new JsonArray();
+
+            System.out.println(conductFields[0].getText().toString());
 
             // Get data from JTextField fields for conduct
             String schoolYear = conductFields[0].getText().replace(" ", "");
@@ -151,20 +135,19 @@ public class SubmitButtonListener implements ActionListener {
             // Add conductObject to conductsArray
             conductsArray.add(conductObject);
         }
+
         conductPayload.add("conducts", conductsArray);
-
-        requestBody.add("scorePayload", scorePayload);
-
         requestBody.add("conductPayload", conductPayload);
 
         // Convert the request Body object to a JSON string
         String jsonBody = new Gson().toJson(requestBody);
 
-        System.out.println("Add new student json : " + jsonBody);
+        System.out.println("Add new student JSON: " + jsonBody);
 
         HttpClient httpClient = HttpClient.newHttpClient();
 
-        HttpRequest request = HttpRequest.newBuilder()
+        HttpRequest request = HttpRequest
+                .newBuilder()
                 .uri(URI.create("http://localhost:8080/api/v1/admin/registerStudent"))
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + JsonWebTokenManager.getInstance().getJwtToken())
@@ -186,7 +169,6 @@ public class SubmitButtonListener implements ActionListener {
                     displayErrorMessages(responseBody);
                 } else {
                     JOptionPane.showMessageDialog(jFrame, response.body().toString());
-
                 }
             }
         } catch (IOException | InterruptedException exception) {
@@ -194,8 +176,43 @@ public class SubmitButtonListener implements ActionListener {
         }
     }
 
-    private void displayErrorMessages(JsonObject responseBody) {
+    private JsonObject getScoresData(int chooseYear, ArrayList<JTextField[]> scoreFields) {
 
+        JsonObject scorePayload = new JsonObject();
+
+        String schoolYear = null;
+
+        schoolYearField.setText(schoolYearField.getText().replace(" ", ""));
+
+
+        schoolYearList.add(schoolYearField);
+
+
+        schoolYear = schoolYearList.get(chooseYear).getText();
+
+        scorePayload.addProperty("schoolYear", schoolYear);
+
+        JsonArray scoresArray = new JsonArray();
+        for (int j = 0; j < subjects.length; j++) {
+            JsonObject scoreObject = new JsonObject();
+            scoreObject.addProperty("subjectName", subjects[j]);
+            JsonArray scores = new JsonArray();
+            JTextField[] fields = scoreFields.get(j);
+
+            for (JTextField field : fields) {
+                String fieldValue = field.getText().isEmpty() ? "" : field.getText();
+                scores.add(fieldValue);
+            }
+
+            scoreObject.add("scores", scores);
+            scoresArray.add(scoreObject);
+        }
+
+        scorePayload.add("scores", scoresArray);
+        return scorePayload;
+    }
+
+    private void displayErrorMessages(JsonObject responseBody) {
         // Add the keys to check to the fieldsToCheck list
         fieldsToCheck.clear();
         fieldsToCheck.add("username");
@@ -215,7 +232,6 @@ public class SubmitButtonListener implements ActionListener {
         for (String field : fieldsToCheck) {
             if (responseBody.has(field)) {
                 String fieldValue = responseBody.get(field).getAsString();
-                // if (fieldValue.contains("is not empty or null") || fieldValue.contains("Number phone") || fieldValue.contains("Student name must have 2 to 50 characters")) {
                 errorMessage.append(fieldValue);
                 JOptionPane.showMessageDialog(jFrame, errorMessage.toString());
                 return; // Stop the loop after displaying the first error message

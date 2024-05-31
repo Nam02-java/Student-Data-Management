@@ -18,14 +18,59 @@ public class SaveTabScores {
     private static boolean flag;
 
     public static void sendUpdateRequest(JTable table) {
+
         flag = true;
+
         DefaultTableModel model = (DefaultTableModel) table.getModel();
 
+        int countToFindOutTheSchoolYear = 0;
+
         for (int i = 0; i < model.getRowCount(); i++) {
+
             if (flag == false) {
                 break;
+
             } else {
-                for (int j = 3; j <= 6; j++) {
+
+                String payload = null;
+
+                for (int j = 4; j <= 7; j++) {
+
+                    if (i % 13 == 0) {
+
+                        if (countToFindOutTheSchoolYear >= 3) {
+                            countToFindOutTheSchoolYear = 0;
+                        }
+
+                        countToFindOutTheSchoolYear += 1;
+
+                        String schoolYear = model.getValueAt(i, 3).toString();
+                        schoolYear.replace(" ", "");
+                        if (schoolYear.isEmpty()) {
+                            String studentName = model.getValueAt(i, 1).toString();
+
+                            String schoolYearSeries = null;
+
+                            switch (countToFindOutTheSchoolYear) {
+                                case 1:
+                                    schoolYearSeries = "First Year";
+                                    break;
+                                case 2:
+                                    schoolYearSeries = "Second Year";
+                                    break;
+                                case 3:
+                                    schoolYearSeries = "Third Year";
+                                    break;
+                            }
+
+                            payload = "School year value of " + studentName + " at " + schoolYearSeries + " is not valid ";
+                            sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
+
+                            flag = false;
+
+                            break;
+                        }
+                    }
 
                     String score = model.getValueAt(i, j).toString();
 
@@ -35,24 +80,24 @@ public class SaveTabScores {
                         continue; // Skip empty scores
                     }
 
-                    String payload = null;
+
                     if (!isValidInteger(score)) {
-                        if (j == 3) {
+                        if (j == 4) {
                             payload = "score 15 miniutes of " + model.getValueAt(i, 2) + " is not valid";
                             sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
                             flag = false;
                             break;
-                        } else if (j == 4) {
+                        } else if (j == 5) {
                             payload = "score 1 hour of " + model.getValueAt(i, 2) + " is not valid";
                             sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
                             flag = false;
                             break;
-                        } else if (j == 5) {
+                        } else if (j == 6) {
                             payload = "score mid term of " + model.getValueAt(i, 2) + " is not valid";
                             sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
                             flag = false;
                             break;
-                        } else {
+                        } else if (j == 7) {
                             payload = "score final term of " + model.getValueAt(i, 2) + " is not valid";
                             sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
                             flag = false;
@@ -63,12 +108,33 @@ public class SaveTabScores {
             }
         }
         if (flag == true) {
-            for (int i = 0; i < model.getRowCount(); i++) {
-                String payload = buildPayload(model, i);
+
+            int totalRow = model.getRowCount();
+            int numberOfSubjectsPerYear = 13;
+            int totalYearStudyOfAstudent = 3;
+
+            totalRow /= numberOfSubjectsPerYear;
+            totalRow /= totalYearStudyOfAstudent;
+
+            List<String> listId = new ArrayList<>();
+            int countId = -39;
+
+            String idStudent = null;
+            for (int i = 0; i < totalRow; i++) {
+                countId += 39;
+                if (i == totalRow) {
+                    idStudent = model.getValueAt(countId - 1, 0).toString();
+                    listId.add(String.valueOf(idStudent));
+                    break;
+                }
+                idStudent = model.getValueAt(countId, 0).toString();
+                listId.add(String.valueOf(idStudent));
+            }
+
+            for (int i = 0; i < listId.size(); i++) {
+                String payload = buildPayload(model, Integer.parseInt(listId.get(i)));
                 if (payload != null) {
-                    sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
-                } else {
-                    System.out.println("Failed to build payload for row " + (i + 1));
+                    sendHttpRequest(payload, 0);
                 }
             }
             updateData(table);
@@ -76,35 +142,82 @@ public class SaveTabScores {
     }
 
 
-    private static String buildPayload(DefaultTableModel model, int selectedRow) {
-        // Get the subject name from the row of the table
-        Object subjectName = model.getValueAt(selectedRow, 2); // Subject name column
+    private static String buildPayload(DefaultTableModel model, int selectedId) {
+        Object studentId = selectedId;
 
-        // Get scores from the columns "15 minutes", "1 hour", "Mid term", "Final exam"
+        // get scores from the columns "School year", "15 minutes", "1 hour", "Mid term", "Final exam"
         List<String> scoresList = new ArrayList<>();
-        for (int i = 3; i <= 6; i++) {
-            Object score = model.getValueAt(selectedRow, i);
-            if (score == "") {
-                scoresList.add("\"\"");
-            } else {
-                scoresList.add("\"" + score.toString() + "\""); // Thêm dấu ngoặc kép vào giá trị
-                //  scoresList.add(score.toString());
+
+        List<String> schoolYearList = new ArrayList<>();
+
+        for (int i = 0; i < model.getRowCount(); i++) {
+            Object presentId = model.getValueAt(i, 0);
+            if (studentId.equals(presentId)) {
+
+                Object subjectName = model.getValueAt(i, 2);
+                if (subjectName.equals("Literature")) {
+                    Object schoolYear = model.getValueAt(i, 3);
+                    schoolYearList.add("\"" + schoolYear.toString() + "\""); // Add quotes to the value
+                }
+
+                for (int j = 4; j <= 7; j++) {
+                    Object score = model.getValueAt(i, j);
+                    if (score == "") {
+                        scoresList.add("\"\"");
+                        continue;
+                    }
+                    scoresList.add("\"" + score.toString() + "\""); // Add quotes to the value
+                }
             }
         }
 
         // build payload JSON
         StringBuilder payloadBuilder = new StringBuilder();
         payloadBuilder.append("{");
-        payloadBuilder.append("\"userId\": ").append(model.getValueAt(selectedRow, 0)).append(",");
-        payloadBuilder.append("\"scorePayload\": {");
-        payloadBuilder.append("\"scores\": [");
-        payloadBuilder.append("{");
-        payloadBuilder.append("\"subjectName\": \"").append(subjectName).append("\",");
-        //payloadBuilder.append("\"scores\": ").append(scoresList);
-        payloadBuilder.append("\"scores\": [").append(String.join(",", scoresList)).append("]");
-        payloadBuilder.append("}");
+        payloadBuilder.append("\"userId\": ").append(studentId).append(",");
+        payloadBuilder.append("\"scorePayloads\": [");
+
+        int numSubjects = 13; // Fixed number of subjects for consistency
+        int expectedScoresPerYear = numSubjects * 4;
+
+        for (int i = 0; i < schoolYearList.size(); i++) {
+            if (i > 0) {
+                payloadBuilder.append(",");
+            }
+            payloadBuilder.append("{");
+            payloadBuilder.append("\"schoolYear\": ").append(schoolYearList.get(i)).append(",");
+            payloadBuilder.append("\"scores\": [");
+
+            for (int j = 0; j < numSubjects; j++) {
+                if (j > 0) {
+                    payloadBuilder.append(",");
+                }
+                int subjectIndex = j;
+                Object subjectName = model.getValueAt(subjectIndex, 2);
+                payloadBuilder.append("{");
+                payloadBuilder.append("\"subjectName\": \"").append(subjectName).append("\",");
+                payloadBuilder.append("\"scores\": [");
+
+                for (int k = 0; k < 4; k++) {
+                    if (k > 0) {
+                        payloadBuilder.append(",");
+                    }
+                    int scoreIndex = i * expectedScoresPerYear + j * 4 + k;
+                    if (scoreIndex < scoresList.size()) {
+                        payloadBuilder.append(scoresList.get(scoreIndex));
+                    } else {
+                        payloadBuilder.append("\"\"");
+                    }
+                }
+                payloadBuilder.append("]");
+                payloadBuilder.append("}");
+            }
+
+            payloadBuilder.append("]");
+            payloadBuilder.append("}");
+        }
+
         payloadBuilder.append("]");
-        payloadBuilder.append("}");
         payloadBuilder.append("}");
         return payloadBuilder.toString();
     }
@@ -115,9 +228,9 @@ public class SaveTabScores {
 
         List<Map<String, Object>> data = TabScoresAction.Action();
         if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
-            data.forEach(row -> model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Subject"), row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA"), "Delete"}));
+            data.forEach(row -> model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Subject"), row.get("School Year"), row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA"), "Delete"}));
         } else {
-            data.forEach(row -> model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Subject"), row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA")}));
+            data.forEach(row -> model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Subject"), row.get("School Year"), row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA")}));
         }
     }
 

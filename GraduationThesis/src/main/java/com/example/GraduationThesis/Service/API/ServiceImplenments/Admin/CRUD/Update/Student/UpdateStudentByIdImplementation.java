@@ -146,16 +146,35 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
         // Check scorePayloads of ScorePayload
         List<ScorePayload> scorePayloads = updateStudentRequest.getScorePayloads();
         if (scorePayloads != null) {
+
+            //Counting variable to serve the control of school year input
+            int count = 0;
+
             for (ScorePayload scorePayload : scorePayloads) {
 
-//                /**
-//                 * set school year
-//                 */
-//                String schoolYear = scorePayload.getSchoolYear();
-//                schoolYear.replace(" ", "");
-//                for (Scores scores : student.getScores()) {
-//                    scores.setSchoolYear(schoolYear);
-//                }
+                count += 1;
+                if (scorePayload.getSchoolYear() == null) {
+                    switch (count) {
+                        case 1:
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School year value at first year scores can not be null");
+                        case 2:
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School year value at second year scores can not be null");
+                        case 3:
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School year value at third year scores can not be null");
+                    }
+                }
+                String schoolYear = scorePayload.getSchoolYear();
+                schoolYear.replace(" ", "");
+                if (schoolYear.isEmpty()) {
+                    switch (count) {
+                        case 1:
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School year value at first year scores is not valid");
+                        case 2:
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School year value at second year scores is not valid");
+                        case 3:
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School year value at third year scores is not valid");
+                    }
+                }
 
                 List<ScoreRequest> scores = scorePayload.getScores();
                 for (ScoreRequest scoreRequest : scores) {

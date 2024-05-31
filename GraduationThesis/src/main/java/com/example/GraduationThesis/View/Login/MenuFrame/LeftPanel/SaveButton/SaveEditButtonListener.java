@@ -102,8 +102,8 @@ public class SaveEditButtonListener implements ActionListener {
                     }
                 } else if (selectedIndex == 2) {
                     int lastRow = tableScores.getRowCount();
-                    count += 1;
-                    if (count == lastRow) {
+                    count += 39;
+                    if (count >= lastRow) {
                         if (response.body().toString().contains("Student updated successfully")) {
                             JOptionPane.showMessageDialog(jFrame, "Updated all successfully");
                             count = 0;
@@ -139,38 +139,5 @@ public class SaveEditButtonListener implements ActionListener {
             ex.printStackTrace();
         }
     }
-
-    /**
-     * no need at present
-     */
-//    private static void displayErrorMessages(JsonObject responseBody, int studentID) {
-//
-//        // Add the keys to check to the fieldsToCheck list
-//        fieldsToCheck.clear();
-//        fieldsToCheck.add("username");
-//        fieldsToCheck.add("classname");
-//        fieldsToCheck.add("email");
-//        fieldsToCheck.add("dateOfBirth");
-//        fieldsToCheck.add("numberphone");
-//        fieldsToCheck.add("address");
-//        fieldsToCheck.add("position");
-//        fieldsToCheck.add("teachername");
-//        fieldsToCheck.add("partentsname");
-//        fieldsToCheck.add("partensnumberphone");
-//
-//
-//        StringBuilder errorMessage = new StringBuilder();
-//
-//        // Checks and displays error messages for the current field
-//        for (String field : fieldsToCheck) {
-//            if (responseBody.has(field)) {
-//                String fieldValue = responseBody.get(field).getAsString();
-//                // if (fieldValue.contains("is not empty or null") || fieldValue.contains("Number phone") || fieldValue.contains("Student name must have 2 to 50 characters")) {
-//                errorMessage.append(fieldValue);
-//                JOptionPane.showMessageDialog(jFrame, "ID " + studentID + " : " + errorMessage.toString());
-//                return; // Stop the loop after displaying the first error message
-//            }
-//        }
-//    }
 }
 
