@@ -39,6 +39,8 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
         List<ScorePayload> scorePayloads = studenRequest.getScorePayloads();
         ConductPayload conductPayload = studenRequest.getConductPayload();
 
+
+
         // Check scores before saving to database
         if (scorePayloads != null) {
 
@@ -71,13 +73,7 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
                     }
                 }
 
-                for (int i = 0; i < scorePayloads.size(); i++) {
-                    for (int j = i + 1; j < scorePayloads.size(); j++) {
-                        if (scorePayloads.get(i).getSchoolYear().replace(" ", "").equals(scorePayloads.get(j).getSchoolYear().replace(" ", ""))) {
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School years overlap");
-                        }
-                    }
-                }
+
 
 
                 List<ScoreRequest> scores = scorePayload.getScores();
@@ -112,6 +108,14 @@ public class RegisterStudentImplementation implements AdminServiceCreateAPI {
                         }
                     }
                     scoreRequest.setScores(scoreList); // Update scores in the ScoreRequest
+                }
+            }
+        }
+
+        for (int i = 0; i < scorePayloads.size(); i++) {
+            for (int j = i + 1; j < scorePayloads.size(); j++) {
+                if (scorePayloads.get(i).getSchoolYear().replace(" ", "").equals(scorePayloads.get(j).getSchoolYear().replace(" ", ""))) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("School years overlap");
                 }
             }
         }

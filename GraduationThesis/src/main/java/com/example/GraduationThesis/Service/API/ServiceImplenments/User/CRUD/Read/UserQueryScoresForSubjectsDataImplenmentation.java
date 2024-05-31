@@ -2,6 +2,7 @@ package com.example.GraduationThesis.Service.API.ServiceImplenments.User.CRUD.Re
 
 import com.example.GraduationThesis.Controller.SringSecurity6.UserData.CustomUserDetails;
 import com.example.GraduationThesis.Model.Enitity.Student.Student;
+import com.example.GraduationThesis.Model.Enitity.Student.Subject.Scores;
 import com.example.GraduationThesis.Model.Enitity.Student.Subject.Subjects;
 import com.example.GraduationThesis.Service.API.InterfaceService.User.CRUD.Read.UserServiceReadAPI;
 import com.example.GraduationThesis.Service.DataBase.InterfaceService.Student.StudentService;
@@ -13,9 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service("UserQueryScoresForSubjectsDataImplenmentation")
@@ -39,10 +38,6 @@ public class UserQueryScoresForSubjectsDataImplenmentation implements UserServic
 
     @Override
     public ResponseEntity<Object> queryScoresForSubjectsData() {
-        /**
-         * get numberphone from current user in this session
-         * jwt + userdetails + authentication
-         */
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String currentUserPhoneNumber = userDetails.getUser().getNumberPhone();
@@ -59,18 +54,34 @@ public class UserQueryScoresForSubjectsDataImplenmentation implements UserServic
                     studentMap.put("ID", student.getId());
                     studentMap.put("Student Name", student.getUsername());
 
-                    Map<String, String> scoresMap = new LinkedHashMap<>();
-                    student.getScores().forEach(score -> {
-                        Subjects subject = subjectService.getSubjectById(score.getSubject_ID());
-                        if (subject != null) {
-                            scoresMap.put(subject.getName() + " Score 15 Min", score.getScore15Min());
-                            scoresMap.put(subject.getName() + " Score 1 Hour", score.getScore1Hour());
-                            scoresMap.put(subject.getName() + " Score Mid Term", score.getScoreMidTerm());
-                            scoresMap.put(subject.getName() + " Score_Final_Exam", score.getScoreFinalExam());
-                            scoresMap.put(subject.getName() + " Score Overall", score.getScoreOverall());
-                        }
-                    });
-                    studentMap.put("Scores", scoresMap);
+                    List<Map<String, Object>> scoresListByYear = new ArrayList<>();
+
+                    student.getScores().stream()
+                            .sorted(Comparator.comparing(Scores::getSchoolYear).thenComparing(Scores::getSubject_ID))
+                            .forEach(score -> {
+                                String schoolYear = score.getSchoolYear();
+                                Subjects subject = subjectService.getSubjectById(score.getSubject_ID());
+
+                                if (subject != null) {
+                                    Map<String, Object> scoresMap = scoresListByYear.stream()
+                                            .filter(map -> schoolYear.equals(map.get("School Year")))
+                                            .findFirst()
+                                            .orElseGet(() -> {
+                                                Map<String, Object> newMap = new LinkedHashMap<>();
+                                                newMap.put("School Year", schoolYear);
+                                                scoresListByYear.add(newMap);
+                                                return newMap;
+                                            });
+
+                                    scoresMap.put(subject.getName() + " Score 15 Min", score.getScore15Min());
+                                    scoresMap.put(subject.getName() + " Score 1 Hour", score.getScore1Hour());
+                                    scoresMap.put(subject.getName() + " Score Mid Term", score.getScoreMidTerm());
+                                    scoresMap.put(subject.getName() + " Score Final Exam", score.getScoreFinalExam());
+                                    scoresMap.put(subject.getName() + " Score Overall", score.getScoreOverall());
+                                }
+                            });
+
+                    studentMap.put("Scores", scoresListByYear);
 
                     return studentMap;
                 })
@@ -78,6 +89,7 @@ public class UserQueryScoresForSubjectsDataImplenmentation implements UserServic
 
         return ResponseEntity.ok(responseData);
     }
+
 
     @Override
     public ResponseEntity<Object> queryConductScoreData() {
