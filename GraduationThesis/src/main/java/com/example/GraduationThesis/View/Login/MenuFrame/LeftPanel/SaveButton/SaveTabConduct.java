@@ -43,6 +43,7 @@ public class SaveTabConduct {
 
                 if (payload != null) {
                     sendHttpRequest(payload, (Integer) model.getValueAt(i, 0));
+                    System.out.println("MY PAY LOAD : " + payload);
                     divisibleCheck -= 1;
                 } else {
                     System.out.println("Failed to build payload for row " + (i + 1));

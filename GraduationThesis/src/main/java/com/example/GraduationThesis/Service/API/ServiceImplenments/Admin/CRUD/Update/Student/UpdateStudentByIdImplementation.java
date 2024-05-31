@@ -309,48 +309,49 @@ public class UpdateStudentByIdImplementation implements AdminServiceUpdateAPI {
      * @param scorePayloads
      */
     private void updateStudentScores(Student student, List<ScorePayload> scorePayloads) {
+        if (scorePayloads != null) {
+            int start = 0;
+            int end = 13;
 
-        int start = 0;
-        int end = 13;
+            for (ScorePayload scorePayload : scorePayloads) {
 
-        for (ScorePayload scorePayload : scorePayloads) {
+                String schoolYear = scorePayload.getSchoolYear();
 
-            String schoolYear = scorePayload.getSchoolYear();
+                for (ScoreRequest scoreRequest : scorePayload.getScores()) {
 
-            for (ScoreRequest scoreRequest : scorePayload.getScores()) {
+                    String subjectName = scoreRequest.getSubjectName();
 
-                String subjectName = scoreRequest.getSubjectName();
+                    List<String> scoreValues = scoreRequest.getScores();
 
-                List<String> scoreValues = scoreRequest.getScores();
+                    List<Scores> studentScores = student.getScores(); // size 39
 
-                List<Scores> studentScores = student.getScores(); // size 39
+                    /**
+                     * A student will have 3 years of study to follow
+                     * 3 years of study will have 13 subjects
+                     * 13 subjects will have a total of 4 points (not counting the final score)
+                     * For example: the json sent scorePayloads contains 3 years of study
+                     * Now scorePayloads has size = 3
+                     * List<Scores> studentScores, the total size is 39
+                     * 13 x 3 = 39
+                     * which 39 / 3 = 3
+                     * From there, there is a suitable sequence of numbers to go through the entire school year in scoresPayload
+                     * even if the json is only sent for 1 or 2 school years.
+                     * start += 13; -> 0 - 13 - 26
+                     * end += 13; -> 13 - 26 - 39
+                     */
 
-                /**
-                 * A student will have 3 years of study to follow
-                 * 3 years of study will have 13 subjects
-                 * 13 subjects will have a total of 4 points (not counting the final score)
-                 * For example: the json sent scorePayloads contains 3 years of study
-                 * Now scorePayloads has size = 3
-                 * List<Scores> studentScores, the total size is 39
-                 * 13 x 3 = 39
-                 * which 39 / 3 = 3
-                 * From there, there is a suitable sequence of numbers to go through the entire school year in scoresPayload
-                 * even if the json is only sent for 1 or 2 school years.
-                 * start += 13; -> 0 - 13 - 26
-                 * end += 13; -> 13 - 26 - 39
-                 */
-
-                for (int i = start; i < end; i++) {
-                    Scores score = studentScores.get(i);
-                    Subjects subject = subjectService.getSubjectByName(subjectName);
-                    if (subject != null && score.getSubject_ID() == subject.getId()) {
-                        updateScoreValues(score, scoreValues);
+                    for (int i = start; i < end; i++) {
+                        Scores score = studentScores.get(i);
+                        Subjects subject = subjectService.getSubjectByName(subjectName);
+                        if (subject != null && score.getSubject_ID() == subject.getId()) {
+                            updateScoreValues(score, scoreValues);
+                        }
+                        updateSchoolYear(score, schoolYear);
                     }
-                    updateSchoolYear(score, schoolYear);
                 }
+                start += 13; // 0 - 13 - 26
+                end += 13;  // 13 - 26 - 39
             }
-            start += 13; // 0 - 13 - 26
-            end += 13;  // 13 - 26 - 39
         }
     }
 
