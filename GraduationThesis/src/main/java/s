@@ -1,31 +1,3 @@
-package com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabScores;
-
-import com.example.GraduationThesis.Model.Enitity.Users.Roles.ERole;
-import com.example.GraduationThesis.Service.LazySingleton.ListRoles.ListRolesManager;
-import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ActionType;
-import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ButtonEditor;
-import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ButtonRenderer;
-
-import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-import java.awt.*;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import java.util.ArrayList;
-
 public class InitializeTabScores extends JPanel {
 
     private JTable table;
@@ -90,7 +62,7 @@ public class InitializeTabScores extends JPanel {
         searchBox = new JComboBox<>();
         searchBox.setEditable(true);
         searchBox.setBounds(100, 20, 165, 25);
-        JButton searchButton = new JButton("Search By Name");
+        JButton searchButton = new JButton("Search");
 
         searchPanel.add(searchBox);
         searchPanel.add(searchButton);
@@ -128,6 +100,7 @@ public class InitializeTabScores extends JPanel {
                 }
             }
         });
+        // Kết thúc thêm mới từ đây
     }
 
     public void updateData() {
@@ -219,4 +192,3 @@ public class InitializeTabScores extends JPanel {
         }
     }
 }
-
