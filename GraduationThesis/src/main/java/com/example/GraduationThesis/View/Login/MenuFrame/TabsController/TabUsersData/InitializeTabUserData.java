@@ -5,7 +5,6 @@ import com.example.GraduationThesis.Service.LazySingleton.ListRoles.ListRolesMan
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ActionType;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ButtonEditor;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ButtonRenderer;
-import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabPosition.TabPositionAction;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -23,7 +22,7 @@ public class InitializeTabUserData extends JPanel {
 
     private JTable table;
     private JFrame frame;
-    private List<String> studentNames;
+    private List<String> userNames;
 
 
     public InitializeTabUserData(JFrame frame) {
@@ -120,7 +119,7 @@ public class InitializeTabUserData extends JPanel {
 
             add(searchPanel, BorderLayout.NORTH);
 
-            studentNames = new ArrayList<>();
+            userNames = new ArrayList<>();
             updateData();
 
             JTextField searchText = (JTextField) searchBox.getEditor().getEditorComponent();
@@ -130,7 +129,7 @@ public class InitializeTabUserData extends JPanel {
                     String input = searchText.getText();
                     searchBox.removeAllItems();
                     if (!input.isEmpty()) {
-                        for (String suggestion : studentNames) {
+                        for (String suggestion : userNames) {
                             if (suggestion.toLowerCase().startsWith(input.toLowerCase())) {
                                 searchBox.addItem(suggestion);
                             }
@@ -163,8 +162,8 @@ public class InitializeTabUserData extends JPanel {
         List<Map<String, Object>> data = TabUsersDataAction.Action();
 
 
-        if (studentNames != null) {
-            studentNames.clear(); // Clear the previous list of student names
+        if (userNames != null) {
+            userNames.clear(); // Clear the previous list of student names
         }
 
         // browse the list of data and add it to the table
@@ -186,7 +185,7 @@ public class InitializeTabUserData extends JPanel {
 
                     model.addRow(new Object[]{row.get("ID"), row.get("Username"), row.get("Numberphone"), row.get("Email"), role,
                             "Admin", "Delete", "", "", "", "", "", "", "", ""});
-                    studentNames.add((String) row.get("Username"));
+                    userNames.add((String) row.get("Username"));
 
                 }
 
@@ -201,6 +200,7 @@ public class InitializeTabUserData extends JPanel {
                     Object parentsNumberPhone = child.get("Parents Number Phone");
                     model.addRow(new Object[]{row.get("ID"), row.get("Username"), row.get("Numberphone"), row.get("Email"), role,
                             "Admin", "Delete", childID, studentName, email, birthOfDate, address, numberPhone, parentsName, parentsNumberPhone});
+                    userNames.add((String) row.get("Username"));
                 });
             });
         } else {
@@ -244,46 +244,43 @@ public class InitializeTabUserData extends JPanel {
         model.removeRow(rowIndex);
     }
 
-    private void filterTableByStudentName(String studentName) {
+    private void filterTableByStudentName(String userName) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        model.setRowCount(0);
+        model.setRowCount(0); // Clear current table data
         List<Map<String, Object>> data = TabUsersDataAction.Action();
 
-        for (Map<String, Object> row : data) {
-            List<Map<String, Object>> theirChildList = (List<Map<String, Object>>) row.get("Their Child");
-            for (Map<String, Object> child : theirChildList) {
-                if (studentName.equals(child.get("Student Name"))) {
-                    String role = ((List<Map<String, Object>>) row.get("Roles")).stream()
-                            .anyMatch(roleMap -> "ROLE_ADMIN".equals(roleMap.get("Role Name"))) ? "Admin" : "User";
+        data.forEach(row -> {
+            if (row.get("Username").equals(userName)) {
+                // filter and count the number of roles "ROLE_ADMIN"
+                long adminCount = ((List<Map<String, Object>>) row.get("Roles")).stream()
+                        .filter(role -> "ROLE_ADMIN".equals(role.get("Role Name")))
+                        .count();
 
+                // define roles based on quantity "ROLE_ADMIN"
+                String role = (adminCount > 0) ? "Admin" : "User";
+
+
+                List<Map<String, Object>> theirChildList = (List<Map<String, Object>>) row.get("Their Child");
+                if (theirChildList.isEmpty()) {
+
+                    model.addRow(new Object[]{row.get("ID"), row.get("Username"), row.get("Numberphone"), row.get("Email"), role,
+                            "Admin", "Delete", "", "", "", "", "", "", "", ""});
+
+                }
+
+                theirChildList.forEach(child -> {
                     Object childID = child.get("ID");
-                    Object studentNameField = child.get("Student Name");
+                    Object student_name = child.get("Student Name");
                     Object email = child.get("Email");
                     Object birthOfDate = child.get("Birth of Date");
                     Object address = child.get("Address");
                     Object numberPhone = child.get("Number Phone");
                     Object parentsName = child.get("Parents Name");
                     Object parentsNumberPhone = child.get("Parents Number Phone");
-
-                    model.addRow(new Object[]{
-                            row.get("ID"),
-                            row.get("Username"),
-                            row.get("Numberphone"),
-                            row.get("Email"),
-                            role,
-                            "Admin",
-                            "Delete",
-                            childID,
-                            studentNameField,
-                            email,
-                            birthOfDate,
-                            address,
-                            numberPhone,
-                            parentsName,
-                            parentsNumberPhone
-                    });
-                }
+                    model.addRow(new Object[]{row.get("ID"), row.get("Username"), row.get("Numberphone"), row.get("Email"), role,
+                            "Admin", "Delete", childID, student_name, email, birthOfDate, address, numberPhone, parentsName, parentsNumberPhone});
+                });
             }
-        }
+        });
     }
 }
