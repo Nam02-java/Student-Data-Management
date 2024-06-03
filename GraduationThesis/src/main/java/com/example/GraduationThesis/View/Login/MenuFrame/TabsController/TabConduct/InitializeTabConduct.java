@@ -5,18 +5,27 @@ import com.example.GraduationThesis.Service.LazySingleton.ListRoles.ListRolesMan
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ActionType;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ButtonEditor;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ButtonRenderer;
+import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabPersonalInformation.TabPersonnalInformationAction;
+import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabScores.TabScoresAction;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class InitializeTabConduct extends JPanel {
 
     private JTable table;
+    private List<String> studentNames;
 
     public InitializeTabConduct() {
         setLayout(new BorderLayout());
@@ -61,7 +70,54 @@ public class InitializeTabConduct extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
 
-        updateData();
+        if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
+
+            // Search tool
+            JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            JComboBox<String> searchBox = new JComboBox<>();
+            searchBox.setEditable(true);
+            searchBox.setBounds(100, 20, 165, 25);
+            JButton searchButton = new JButton("Search By Name");
+
+            searchPanel.add(searchBox);
+            searchPanel.add(searchButton);
+
+            add(searchPanel, BorderLayout.NORTH);
+
+            studentNames = new ArrayList<>();
+            updateData();
+
+            JTextField searchText = (JTextField) searchBox.getEditor().getEditorComponent();
+            searchText.addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyReleased(KeyEvent e) {
+                    String input = searchText.getText();
+                    searchBox.removeAllItems();
+                    if (!input.isEmpty()) {
+                        for (String suggestion : studentNames) {
+                            if (suggestion.toLowerCase().startsWith(input.toLowerCase())) {
+                                searchBox.addItem(suggestion);
+                            }
+                        }
+                        searchText.setText(input);
+                        searchBox.setPopupVisible(true);
+                    }
+                }
+            });
+
+            // Add action listener to search button
+            searchButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String query = searchText.getText().trim();
+                    if (!query.isEmpty()) {
+                        filterTableByStudentName(query);
+                    } else {
+                        updateData();
+                    }
+                }
+            });
+        }
     }
 
     public void updateData() {
@@ -71,27 +127,62 @@ public class InitializeTabConduct extends JPanel {
         // get data from api
         List<Map<String, Object>> data = TabConductAction.Action();
 
-        // iterate over each object in the list and add it to the table
-        data.forEach(row -> {
 
-            int studentID = (int) row.get("ID");
-            String studentName = (String) row.get("Student Name");
+        if (studentNames != null) {
+            studentNames.clear(); // Clear the previous list of student names
+        }
 
-            List<Map<String, Object>> conducts = (List<Map<String, Object>>) row.get("Conducts");
+        AtomicInteger count = new AtomicInteger(0);
+        if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
 
-            conducts.forEach(conduct -> {
+            // iterate over each object in the list and add it to the table
+            data.forEach(row -> {
 
-                String schoolYear = (String) conduct.get("School_Year");
-                String conductToString = (String) conduct.get("Conduct");
-                String attendanceScore = (String) conduct.get("Attendance_Score");
+                int studentID = (int) row.get("ID");
+                String studentName = (String) row.get("Student Name");
 
-                if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
-                    model.addRow(new Object[]{studentID, studentName, schoolYear, conductToString, attendanceScore, "Delete"});
-                } else {
-                    model.addRow(new Object[]{studentID, studentName, schoolYear, conductToString, attendanceScore});
-                }
+                List<Map<String, Object>> conducts = (List<Map<String, Object>>) row.get("Conducts");
+
+                conducts.forEach(conduct -> {
+
+                    String schoolYear = (String) conduct.get("School_Year");
+                    String conductToString = (String) conduct.get("Conduct");
+                    String attendanceScore = (String) conduct.get("Attendance_Score");
+
+                    if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
+                        model.addRow(new Object[]{studentID, studentName, schoolYear, conductToString, attendanceScore, "Delete"});
+                        if (studentNames != null) {
+                            if (count.get() % 3 == 0) {
+                                studentNames.add((String) row.get("Student Name"));
+                            }
+                        }
+                        count.getAndIncrement();
+                    } else {
+                        model.addRow(new Object[]{studentID, studentName, schoolYear, conductToString, attendanceScore});
+                    }
+                });
             });
-        });
+
+        } else {
+
+            // iterate over each object in the list and add it to the table
+            data.forEach(row -> {
+
+                int studentID = (int) row.get("ID");
+                String studentName = (String) row.get("Student Name");
+
+                List<Map<String, Object>> conducts = (List<Map<String, Object>>) row.get("Conducts");
+
+                conducts.forEach(conduct -> {
+
+                    String schoolYear = (String) conduct.get("School_Year");
+                    String conductToString = (String) conduct.get("Conduct");
+                    String attendanceScore = (String) conduct.get("Attendance_Score");
+
+                    model.addRow(new Object[]{studentID, studentName, schoolYear, conductToString, attendanceScore});
+                });
+            });
+        }
     }
 
 
@@ -104,5 +195,51 @@ public class InitializeTabConduct extends JPanel {
 
     public JTable getTable() {
         return table;
+    }
+
+    private void filterTableByStudentName(String studentName) {
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        model.setRowCount(0); // Clear current table data
+
+        List<Map<String, Object>> data = TabConductAction.Action();
+
+        for (Map<String, Object> row : data) {
+            if (row.get("Student Name").equals(studentName)) {
+                List<Map<String, Object>> conducts = (List<Map<String, Object>>) row.get("Conducts");
+
+                int yearCount = 0; // Counter for the number of years added
+
+                for (Map<String, Object> conduct : conducts) {
+                    if (yearCount >= 3) {
+                        break; // Stop after adding three years of data
+                    }
+
+                    String schoolYear = (String) conduct.get("School_Year");
+                    String conductToString = (String) conduct.get("Conduct");
+                    String attendanceScore = (String) conduct.get("Attendance_Score");
+
+                    if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
+                        model.addRow(new Object[]{
+                                row.get("ID"),
+                                studentName,
+                                schoolYear,
+                                conductToString,
+                                attendanceScore,
+                                "Delete"
+                        });
+                    } else {
+                        model.addRow(new Object[]{
+                                row.get("ID"),
+                                studentName,
+                                schoolYear,
+                                conductToString,
+                                attendanceScore
+                        });
+                    }
+
+                    yearCount++;
+                }
+            }
+        }
     }
 }

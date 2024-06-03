@@ -6,11 +6,17 @@ import com.example.GraduationThesis.Service.LazySingleton.ListRoles.ListRolesMan
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ActionType;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ButtonEditor;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ButtonRenderer;
+import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabPersonalInformation.TabPersonnalInformationAction;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Arrays;
@@ -18,6 +24,7 @@ import java.util.Arrays;
 public class InitializeTabGeneralInformation extends JPanel {
 
     public JTable table;
+    private List<String> studentNames;
 
     public InitializeTabGeneralInformation() {
         setLayout(new BorderLayout());
@@ -66,7 +73,55 @@ public class InitializeTabGeneralInformation extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
 
 
-        // Lấy dữ liệu từ API và cập nhật bảng
+        if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
+
+            // Search tool
+            JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            JComboBox<String> searchBox = new JComboBox<>();
+            searchBox.setEditable(true);
+            searchBox.setBounds(100, 20, 165, 25);
+            JButton searchButton = new JButton("Search By Name");
+
+            searchPanel.add(searchBox);
+            searchPanel.add(searchButton);
+
+            add(searchPanel, BorderLayout.NORTH);
+
+            studentNames = new ArrayList<>();
+            updateData();
+
+            JTextField searchText = (JTextField) searchBox.getEditor().getEditorComponent();
+            searchText.addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyReleased(KeyEvent e) {
+                    String input = searchText.getText();
+                    searchBox.removeAllItems();
+                    if (!input.isEmpty()) {
+                        for (String suggestion : studentNames) {
+                            if (suggestion.toLowerCase().startsWith(input.toLowerCase())) {
+                                searchBox.addItem(suggestion);
+                            }
+                        }
+                        searchText.setText(input);
+                        searchBox.setPopupVisible(true);
+                    }
+                }
+            });
+
+            // Add action listener to search button
+            searchButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String query = searchText.getText().trim();
+                    if (!query.isEmpty()) {
+                        filterTableByStudentName(query);
+                    } else {
+                        updateData();
+                    }
+                }
+            });
+        }
+
         updateData();
     }
 
@@ -78,11 +133,18 @@ public class InitializeTabGeneralInformation extends JPanel {
 
         List<Map<String, Object>> data = TabGeneralInformationAction.Action();
 
+        if (studentNames != null) {
+            studentNames.clear(); // Clear the previous list of student names
+        }
+
         if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
 
-            data.forEach(row -> model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Class Name"),
-                    row.get("Position"), row.get("Teacher Name"), row.get("Address"), row.get("Number Phone"),
-                    row.get("GPA"), "Delete"}));
+            data.forEach(row -> {
+                model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Class Name"),
+                        row.get("Position"), row.get("Teacher Name"), row.get("Address"), row.get("Number Phone"),
+                        row.get("GPA"), "Delete"});
+                studentNames.add((String) row.get("Student Name"));
+            });
         } else {
 
             data.forEach(row -> model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Class Name"),
@@ -105,5 +167,19 @@ public class InitializeTabGeneralInformation extends JPanel {
         this.table = table;
     }
 
+    private void filterTableByStudentName(String studentName) {
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        model.setRowCount(0);
+        List<Map<String, Object>> data = TabGeneralInformationAction.Action();
 
+        for (Map<String, Object> row : data) {
+            if (row.get("Student Name").equals(studentName)) {
+                if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
+                    model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Class Name"),
+                            row.get("Position"), row.get("Teacher Name"), row.get("Address"), row.get("Number Phone"),
+                            row.get("GPA"), "Delete"});
+                }
+            }
+        }
+    }
 }

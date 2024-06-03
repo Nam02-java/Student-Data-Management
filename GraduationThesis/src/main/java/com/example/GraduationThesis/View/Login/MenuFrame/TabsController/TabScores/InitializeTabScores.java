@@ -7,9 +7,7 @@ import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.Decorato
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ButtonRenderer;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
+
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
@@ -29,7 +27,6 @@ import java.util.ArrayList;
 public class InitializeTabScores extends JPanel {
 
     private JTable table;
-    private JComboBox<String> searchBox;
     private List<String> studentNames;
 
     public InitializeTabScores() {
@@ -54,9 +51,7 @@ public class InitializeTabScores extends JPanel {
             }
         };
 
-
         table = new JTable(model);
-
 
         table.setEnabled(false);
 
@@ -85,57 +80,68 @@ public class InitializeTabScores extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Bắt đầu thêm mới từ đây
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        searchBox = new JComboBox<>();
-        searchBox.setEditable(true);
-        searchBox.setBounds(100, 20, 165, 25);
-        JButton searchButton = new JButton("Search By Name");
 
-        searchPanel.add(searchBox);
-        searchPanel.add(searchButton);
+        if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
 
-        add(searchPanel, BorderLayout.NORTH);
+            // Search tool
+            JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            JComboBox<String> searchBox = new JComboBox<>();
+            searchBox.setEditable(true);
+            searchBox.setBounds(100, 20, 165, 25);
+            JButton searchButton = new JButton("Search By Name");
 
-        studentNames = new ArrayList<>();
-        updateData();
+            searchPanel.add(searchBox);
+            searchPanel.add(searchButton);
 
-        JTextField searchText = (JTextField) searchBox.getEditor().getEditorComponent();
-        searchText.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyReleased(KeyEvent e) {
-                String input = searchText.getText();
-                searchBox.removeAllItems();
-                if (!input.isEmpty()) {
-                    for (String suggestion : studentNames) {
-                        if (suggestion.toLowerCase().startsWith(input.toLowerCase())) {
-                            searchBox.addItem(suggestion);
+            add(searchPanel, BorderLayout.NORTH);
+
+            studentNames = new ArrayList<>();
+            updateData();
+
+            JTextField searchText = (JTextField) searchBox.getEditor().getEditorComponent();
+            searchText.addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyReleased(KeyEvent e) {
+                    String input = searchText.getText();
+                    searchBox.removeAllItems();
+                    if (!input.isEmpty()) {
+                        for (String suggestion : studentNames) {
+                            if (suggestion.toLowerCase().startsWith(input.toLowerCase())) {
+                                searchBox.addItem(suggestion);
+                            }
                         }
+                        searchText.setText(input);
+                        searchBox.setPopupVisible(true);
                     }
-                    searchText.setText(input);
-                    searchBox.setPopupVisible(true);
                 }
-            }
-        });
+            });
 
-        // Add action listener to search button
-        searchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String query = searchText.getText().trim();
-                if (!query.isEmpty()) {
-                    filterTableByStudentName(query);
+            // Add action listener to search button
+            searchButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String query = searchText.getText().trim();
+                    if (!query.isEmpty()) {
+                        filterTableByStudentName(query);
+                    } else {
+                        updateData();
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     public void updateData() {
+
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         model.setRowCount(0); // delete current data in the table
 
         List<Map<String, Object>> data = TabScoresAction.Action();
-        studentNames.clear(); // Clear the previous list of student names
+
+        if(studentNames!=null){
+            studentNames.clear(); // Clear the previous list of student names
+        }
+
         AtomicInteger count = new AtomicInteger(0);
         if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
             data.forEach(row -> {
@@ -144,8 +150,10 @@ public class InitializeTabScores extends JPanel {
                         row.get("School Year"),
                         row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA"),
                         "Delete"});
-                if (count.get() % 39 == 0) {
-                    studentNames.add((String) row.get("Student Name"));
+                if (studentNames != null) {
+                    if (count.get() % 39 == 0) {
+                        studentNames.add((String) row.get("Student Name"));
+                    }
                 }
                 count.getAndIncrement();
             });
@@ -155,7 +163,6 @@ public class InitializeTabScores extends JPanel {
                         row.get("ID"), row.get("Student Name"), row.get("Subject"),
                         row.get("School Year"),
                         row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA")});
-                studentNames.add((String) row.get("Student Name"));
             });
         }
         highlightSchoolYearColumn();
@@ -198,7 +205,7 @@ public class InitializeTabScores extends JPanel {
 
     private void filterTableByStudentName(String studentName) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        model.setRowCount(0); // Xóa tất cả các hàng hiện tại
+        model.setRowCount(0);
         List<Map<String, Object>> data = TabScoresAction.Action();
 
         for (Map<String, Object> row : data) {

@@ -34,10 +34,10 @@ public class LoginButtonListener implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-//        String username = usernameField.getText();
-//        String password = new String(passwordField.getPassword());
-        String username = "quantrivien02";
-        String password = "quantrivien02";
+        String username = usernameField.getText();
+        String password = new String(passwordField.getPassword());
+//        String username = "quantrivien02";
+//        String password = "quantrivien02";
 
         if ("Enter username".equals(username)) {
             JOptionPane.showMessageDialog(jFrame, "username can not be null");
