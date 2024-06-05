@@ -10,6 +10,7 @@ import javax.swing.table.DefaultTableModel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.SaveButton.SaveEditButtonListener.sendHttpRequest;
 
@@ -242,15 +243,35 @@ public class SaveTabScores {
 
     private static void updateData(JTable table) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        model.setRowCount(0); // delete current data in the table
-
         List<Map<String, Object>> data = TabScoresAction.Action();
+
+        int currentRowCount = model.getRowCount();
+
+        model.setRowCount(0);
+
         if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
-            data.forEach(row -> model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Subject"), row.get("School Year"), row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA"), "Delete"}));
+            AtomicInteger count = new AtomicInteger(0);
+            data.forEach(row -> {
+                model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Subject"), row.get("School Year"), row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA"), "Delete"});
+                count.getAndIncrement();
+                // Add blank lines after every 39 lines
+                if (count.get() % 39 == 0) {
+                    model.addRow(new Object[]{"", "", "", "", "", "", "", "", "", ""});
+                }
+            });
         } else {
             data.forEach(row -> model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Subject"), row.get("School Year"), row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA")}));
         }
+
+        // If the current number of lines is less than before the update, add more blank lines
+        int updatedRowCount = model.getRowCount();
+        if (updatedRowCount < currentRowCount) {
+            for (int i = updatedRowCount; i < currentRowCount; i++) {
+                model.addRow(new Object[]{"", "", "", "", "", "", "", "", "", ""});
+            }
+        }
     }
+
 
     private static boolean isValidInteger(String value) {
         try {

@@ -38,10 +38,13 @@ public class InitializeTabScores extends JPanel {
         DefaultTableModel model = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
+                Object subject = getValueAt(row, 2); // Get the value of "Subject" column
                 // Only allow editing in School Year column for specified rows, ignore separator rows
                 if (column == 3 && row % 40 != 39) {
-                    return row % 13 == 0;
+                    // Allow editing for rows where Subject is "Literature" or it's the first row of each group
+                    return (row % 13 == 0) || (subject != null && subject.equals("Literature"));
                 }
+
                 // Disable editing for other columns and separator rows
                 return !(column == 0 || column == 1 || column == 2 || column == 8) && row % 40 != 39;
             }
@@ -166,15 +169,15 @@ public class InitializeTabScores extends JPanel {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component cell = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-                // Skip separator rows
-                if (row % 40 == 39) {
-                    cell.setBackground(table.getBackground());
-                    cell.setForeground(table.getForeground());
-                } else if (row % 13 == 0) {
+                DefaultTableModel model = (DefaultTableModel) table.getModel();
+                Object subject = model.getValueAt(row, 2); // Get the value of "Subject" column
+
+                if (subject != null && subject.equals("Literature")) {
+                    // If the subject is "Literature", highlight the "School Year" column
                     cell.setBackground(Color.RED);
                     cell.setForeground(Color.WHITE);
                 } else {
-                    // Reset to default colors if not the specified rows
+                    // Otherwise, reset to default colors
                     cell.setBackground(table.getBackground());
                     cell.setForeground(table.getForeground());
                 }
@@ -183,6 +186,7 @@ public class InitializeTabScores extends JPanel {
             }
         });
     }
+
 
     public void deleteRecord(int rowIndex) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
