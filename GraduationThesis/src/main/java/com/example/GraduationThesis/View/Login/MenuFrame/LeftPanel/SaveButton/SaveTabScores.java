@@ -23,6 +23,24 @@ public class SaveTabScores {
 
         DefaultTableModel model = (DefaultTableModel) table.getModel();
 
+        // remove space line
+        int rowCount = model.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            boolean allEmpty = true;
+            for (int j = 0; j < model.getColumnCount(); j++) {
+                Object value = model.getValueAt(i, j);
+
+                if (value != null && !value.toString().isEmpty()) {
+                    allEmpty = false;
+                    break;
+                }
+            }
+            if (allEmpty) {
+                model.removeRow(i);
+            }
+        }
+
+
         int countToFindOutTheSchoolYear = 0;
 
         for (int i = 0; i < model.getRowCount(); i++) {

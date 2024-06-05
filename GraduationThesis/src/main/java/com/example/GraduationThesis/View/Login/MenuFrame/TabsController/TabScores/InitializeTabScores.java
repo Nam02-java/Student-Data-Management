@@ -35,19 +35,15 @@ public class InitializeTabScores extends JPanel {
         // create table
         String[] columns = {"ID", "Student Name", "Subject", "School Year", "15 minutes", "1 hour", "Mid term", "Final exam", "GPA"};
 
-
         DefaultTableModel model = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                // Only allow editing in School Year column for specified rows
-                if (column == 3) {
+                // Only allow editing in School Year column for specified rows, ignore separator rows
+                if (column == 3 && row % 40 != 39) {
                     return row % 13 == 0;
                 }
-                /**
-                 * Disable editing
-                 * Column ID score, student name, GPA are three tables that cannot be edited in the scores tab
-                 */
-                return !(column == 0 || column == 1 || column == 2 || column == 8);
+                // Disable editing for other columns and separator rows
+                return !(column == 0 || column == 1 || column == 2 || column == 8) && row % 40 != 39;
             }
         };
 
@@ -65,11 +61,6 @@ public class InitializeTabScores extends JPanel {
             TableColumn deleteButtonColumn = table.getColumnModel().getColumn(model.getColumnCount() - 1);
             deleteButtonColumn.setCellRenderer(new ButtonRenderer());
 
-            /**
-             * Enum type
-             * this tab is for student so we need delete student
-             * set DELETE_STUDENT like a flag
-             */
             ActionType actionType = ActionType.DELETE_STUDENT;
 
             deleteButtonColumn.setCellEditor(new ButtonEditor(new JCheckBox(), this, actionType));
@@ -80,9 +71,7 @@ public class InitializeTabScores extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
 
-
         if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
-
             // Search tool
             JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
             JComboBox<String> searchBox = new JComboBox<>();
@@ -116,7 +105,6 @@ public class InitializeTabScores extends JPanel {
                 }
             });
 
-            // Add action listener to search button
             searchButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -132,13 +120,12 @@ public class InitializeTabScores extends JPanel {
     }
 
     public void updateData() {
-
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         model.setRowCount(0); // delete current data in the table
 
         List<Map<String, Object>> data = TabScoresAction.Action();
 
-        if(studentNames!=null){
+        if (studentNames != null) {
             studentNames.clear(); // Clear the previous list of student names
         }
 
@@ -156,6 +143,11 @@ public class InitializeTabScores extends JPanel {
                     }
                 }
                 count.getAndIncrement();
+
+                // Add a separating row after every 39 rows
+                if (count.get() % 39 == 0) {
+                    model.addRow(new Object[]{"", "", "", "", "", "", "", "", "", ""});
+                }
             });
         } else {
             data.forEach(row -> {
@@ -174,8 +166,11 @@ public class InitializeTabScores extends JPanel {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component cell = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-                // Color rows 0, 13, 26, 39, etc.
-                if (row % 13 == 0) {
+                // Skip separator rows
+                if (row % 40 == 39) {
+                    cell.setBackground(table.getBackground());
+                    cell.setForeground(table.getForeground());
+                } else if (row % 13 == 0) {
                     cell.setBackground(Color.RED);
                     cell.setForeground(Color.WHITE);
                 } else {
@@ -188,7 +183,6 @@ public class InitializeTabScores extends JPanel {
             }
         });
     }
-
 
     public void deleteRecord(int rowIndex) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
@@ -224,6 +218,6 @@ public class InitializeTabScores extends JPanel {
                 }
             }
         }
+        highlightSchoolYearColumn();
     }
 }
-

@@ -25,6 +25,23 @@ public class DeleteTabScoresImplements implements ActionInterface {
 
         DefaultTableModel model = (DefaultTableModel) table.getModel();
 
+        // remove space line
+        int rowCount = model.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            boolean allEmpty = true;
+            for (int j = 0; j < model.getColumnCount(); j++) {
+                Object valueModel = model.getValueAt(i, j);
+
+                if (valueModel != null && !valueModel.toString().isEmpty()) {
+                    allEmpty = false;
+                    break;
+                }
+            }
+            if (allEmpty) {
+                model.removeRow(i);
+            }
+        }
+
         String payload = buildPayload(model, selectedRow);
 
         sendRequest(payload);
