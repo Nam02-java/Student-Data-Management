@@ -28,6 +28,8 @@ public class InitializeTabScores extends JPanel {
 
     private JTable table;
     private List<String> studentNames;
+    private boolean isEditingSchoolYear = false; // flag to control editing work
+
 
     public InitializeTabScores() {
         setLayout(new BorderLayout());
@@ -38,15 +40,16 @@ public class InitializeTabScores extends JPanel {
         DefaultTableModel model = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                Object subject = getValueAt(row, 2); // Get the value of "Subject" column
-                // Only allow editing in School Year column for specified rows, ignore separator rows
-                if (column == 3 && row % 40 != 39) {
-                    // Allow editing for rows where Subject is "Literature" or it's the first row of each group
-                    return (row % 13 == 0) || (subject != null && subject.equals("Literature"));
+                if (isEditingSchoolYear) {
+                    Object subject = getValueAt(row, 2); // Get the value of "Subject" column
+                    // Only allow editing in School Year column for specified rows, ignore separator rows
+                    if (column == 3 && row % 40 != 39) {
+                        // Allow editing for rows where Subject is "Literature" or it's the first row of each group
+                        return (row % 13 == 0) || (subject != null && subject.equals("Literature"));
+                    }
                 }
-
                 // Disable editing for other columns and separator rows
-                return !(column == 0 || column == 1 || column == 2 || column == 8) && row % 40 != 39;
+                return false;
             }
         };
 
@@ -76,16 +79,22 @@ public class InitializeTabScores extends JPanel {
 
         if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
             // Search tool
-            JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            JPanel searchPanel = new JPanel(null); // Use null layout for absolute positioning
+            searchPanel.setPreferredSize(new Dimension(800, 50));
+            add(searchPanel, BorderLayout.NORTH);
+
+            JButton editSchoolYear = new JButton("Edit School Year");
+            editSchoolYear.setBounds(290, 10, 128, 25); // Set the bounds for the editSchoolYear button
+            searchPanel.add(editSchoolYear);
+
             JComboBox<String> searchBox = new JComboBox<>();
             searchBox.setEditable(true);
-            searchBox.setBounds(100, 20, 165, 25);
-            JButton searchButton = new JButton("Search By Name");
-
+            searchBox.setBounds(721, 10, 150, 25); // Set the bounds for the searchBox
             searchPanel.add(searchBox);
-            searchPanel.add(searchButton);
 
-            add(searchPanel, BorderLayout.NORTH);
+            JButton searchButton = new JButton("Search By Name");
+            searchButton.setBounds(880, 10, 135, 25); // Set the bounds for the searchButton
+            searchPanel.add(searchButton);
 
             studentNames = new ArrayList<>();
             updateData();
@@ -117,6 +126,14 @@ public class InitializeTabScores extends JPanel {
                     } else {
                         updateData();
                     }
+                }
+            });
+
+            editSchoolYear.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    isEditingSchoolYear = !isEditingSchoolYear; // Toggle editing mode
+                    table.repaint(); // Refresh the table to update cell renderers
                 }
             });
         }
@@ -169,15 +186,21 @@ public class InitializeTabScores extends JPanel {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component cell = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-                DefaultTableModel model = (DefaultTableModel) table.getModel();
-                Object subject = model.getValueAt(row, 2); // Get the value of "Subject" column
+                if (isEditingSchoolYear) {
+                    DefaultTableModel model = (DefaultTableModel) table.getModel();
+                    Object subject = model.getValueAt(row, 2); // Get the value of "Subject" column
 
-                if (subject != null && subject.equals("Literature")) {
-                    // If the subject is "Literature", highlight the "School Year" column
-                    cell.setBackground(Color.RED);
-                    cell.setForeground(Color.WHITE);
+                    if (subject != null && subject.equals("Literature")) {
+                        // If the subject is "Literature", highlight the "School Year" column
+                        cell.setBackground(Color.GRAY);
+                        cell.setForeground(Color.WHITE);
+                    } else {
+                        // Otherwise, reset to default colors
+                        cell.setBackground(table.getBackground());
+                        cell.setForeground(table.getForeground());
+                    }
                 } else {
-                    // Otherwise, reset to default colors
+                    // Reset to default colors when not editing
                     cell.setBackground(table.getBackground());
                     cell.setForeground(table.getForeground());
                 }
@@ -186,7 +209,6 @@ public class InitializeTabScores extends JPanel {
             }
         });
     }
-
 
     public void deleteRecord(int rowIndex) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
@@ -225,3 +247,4 @@ public class InitializeTabScores extends JPanel {
         highlightSchoolYearColumn();
     }
 }
+
