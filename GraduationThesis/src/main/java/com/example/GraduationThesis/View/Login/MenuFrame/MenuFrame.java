@@ -6,10 +6,10 @@ import com.example.GraduationThesis.Service.LazySingleton.ListRoles.ListRolesMan
 import com.example.GraduationThesis.View.Login.MenuFrame.LeftPanel.LeftPanel;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabConduct.InitializeTabConduct;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabPersonalInformation.InitializeTabPersonalInformation;
-import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabScores.InitializeTabScores;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabAction;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabGeneralInformation.InitializeTabGeneralInformation;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabPosition.InitializeTabPosition;
+import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabScores.InitializeTabScores;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabUsersData.InitializeTabUserData;
 
 import javax.swing.*;
