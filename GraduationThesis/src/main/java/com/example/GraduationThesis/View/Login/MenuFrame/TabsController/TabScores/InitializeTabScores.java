@@ -7,52 +7,43 @@ import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.Decorato
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ButtonRenderer;
 
 import javax.swing.*;
-
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import java.util.ArrayList;
-
-
 public class InitializeTabScores extends JPanel {
 
     private JTable table;
+    private JComboBox<String> searchBox;
     private List<String> studentNames;
+    private Map<String, List<String>> studentNameToSchoolYears; // Map to store student name and their school years
+    private boolean isUpdatingSchoolYear; // Flag to prevent recursive updates
+    private List<List<Integer>> blocks; // List of blocks, each block contains indices of 13 rows
+    private JLabel currentSchoolYearLabel;
+    private List<String> currentSchoolYears;
+    private int currentSchoolYearIndex;
 
     public InitializeTabScores() {
         setLayout(new BorderLayout());
 
-        // create table
-        String[] columns = {"ID", "Student Name", "Subject", "School Year", "15 minutes", "1 hour", "Mid term", "Final exam", "GPA"};
-
+        String[] columns = {"Student Name", "Subject", "School Year", "15 minutes", "1 hour", "Mid term", "Final exam", "GPA"};
         DefaultTableModel model = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                Object subject = getValueAt(row, 2); // Get the value of "Subject" column
-                // Only allow editing in School Year column for specified rows, ignore separator rows
-                if (column == 3 && row % 40 != 39) {
-                    // Allow editing for rows where Subject is "Literature" or it's the first row of each group
-                    return (row % 13 == 0) || (subject != null && subject.equals("Literature"));
-                }
-
-                // Disable editing for other columns and separator rows
-                return !(column == 0 || column == 1 || column == 2 || column == 8) && row % 40 != 39;
+                // Disable editing for specific columns
+                return column != 0 && column != 7; // Column 0 is "Student Name", column 7 is "GPA"
             }
         };
 
         table = new JTable(model);
-
         table.setEnabled(false);
 
         if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
@@ -65,6 +56,11 @@ public class InitializeTabScores extends JPanel {
             TableColumn deleteButtonColumn = table.getColumnModel().getColumn(model.getColumnCount() - 1);
             deleteButtonColumn.setCellRenderer(new ButtonRenderer());
 
+            /**
+             * Enum type
+             * this tab is for student so we need delete student
+             * set DELETE_STUDENT like a flag
+             */
             ActionType actionType = ActionType.DELETE_STUDENT;
 
             deleteButtonColumn.setCellEditor(new ButtonEditor(new JCheckBox(), this, actionType));
@@ -75,165 +71,232 @@ public class InitializeTabScores extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
 
-        if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
-            // Search tool
-            JPanel searchPanel = new JPanel(new GridBagLayout());
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.gridx = 0;
-            gbc.gridy = 0;
-            gbc.insets = new Insets(0, 0, 0, 10); // Khoảng cách giữa các thành phần
-            gbc.anchor = GridBagConstraints.LINE_START; // Căn chỉnh bên trái
+        // Adding search panel
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        searchBox = new JComboBox<>();
+        searchBox.setEditable(true);
+        searchBox.setBounds(100, 20, 165, 25);
+        JButton searchButton = new JButton("Search");
 
-            JButton editSchoolYear = new JButton("editSchoolYear");
-            searchPanel.add(editSchoolYear, gbc);
+        searchPanel.add(searchBox);
+        searchPanel.add(searchButton);
 
-            JComboBox<String> searchBox = new JComboBox<>();
-            searchBox.setEditable(true);
-            gbc.gridx = 1;
-            searchPanel.add(searchBox, gbc);
+        add(searchPanel, BorderLayout.NORTH);
 
-            JButton searchButton = new JButton("Search By Name");
-            gbc.gridx = 2;
-            searchPanel.add(searchButton, gbc);
+        studentNames = new ArrayList<>();
+        studentNameToSchoolYears = new HashMap<>();
+        loadStudentNames(); // Load the list of student names and school years
 
-            add(searchPanel, BorderLayout.NORTH);
-
-            studentNames = new ArrayList<>();
-            updateData();
-
-            JTextField searchText = (JTextField) searchBox.getEditor().getEditorComponent();
-            searchText.addKeyListener(new KeyAdapter() {
-                @Override
-                public void keyReleased(KeyEvent e) {
-                    String input = searchText.getText();
-                    searchBox.removeAllItems();
-                    if (!input.isEmpty()) {
-                        for (String suggestion : studentNames) {
-                            if (suggestion.toLowerCase().startsWith(input.toLowerCase())) {
-                                searchBox.addItem(suggestion);
-                            }
+        JTextField searchText = (JTextField) searchBox.getEditor().getEditorComponent();
+        searchText.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                String input = searchText.getText();
+                searchBox.removeAllItems();
+                if (!input.isEmpty()) {
+                    Set<String> suggestions = new HashSet<>();
+                    for (String suggestion : studentNames) {
+                        if (suggestion.toLowerCase().startsWith(input.toLowerCase()) && !suggestions.contains(suggestion)) {
+                            suggestions.add(suggestion);
+                            searchBox.addItem(suggestion);
                         }
-                        searchText.setText(input);
-                        searchBox.setPopupVisible(true);
                     }
+                    searchText.setText(input);
+                    searchBox.setPopupVisible(true);
                 }
-            });
+            }
+        });
 
-            searchButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    String query = searchText.getText().trim();
-                    if (!query.isEmpty()) {
-                        filterTableByStudentName(query);
-                    } else {
-                        updateData();
+        // Add action listener to search button
+        searchButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String selectedItem = (String) searchBox.getSelectedItem();
+                if (selectedItem != null && !selectedItem.isEmpty()) {
+                    String[] parts = selectedItem.split(" \\(");
+                    String studentName = parts[0].trim();
+                    currentSchoolYears = studentNameToSchoolYears.get(studentName);
+                    if (currentSchoolYears != null && !currentSchoolYears.isEmpty()) {
+                        currentSchoolYearIndex = 0;
+                        updateTableForCurrentSchoolYear();
                     }
                 }
-            });
+            }
+        });
+
+        // Adding navigation panel
+        JPanel navigationPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton leftButton = new JButton("<");
+        JButton rightButton = new JButton(">");
+        JButton editButton = new JButton("Edit");
+        currentSchoolYearLabel = new JLabel();
+
+        leftButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (currentSchoolYears != null && currentSchoolYearIndex > 0) {
+                    currentSchoolYearIndex--;
+                    updateTableForCurrentSchoolYear();
+                }
+            }
+        });
+
+        rightButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (currentSchoolYears != null && currentSchoolYearIndex < currentSchoolYears.size() - 1) {
+                    currentSchoolYearIndex++;
+                    updateTableForCurrentSchoolYear();
+                }
+            }
+        });
+
+        navigationPanel.add(leftButton);
+        navigationPanel.add(currentSchoolYearLabel);
+        navigationPanel.add(editButton);
+        navigationPanel.add(rightButton);
+
+        add(navigationPanel, BorderLayout.SOUTH);
+
+        // Initialize blocks
+        initializeBlocks();
+
+        // Add TableModelListener to detect changes in the "School Year" column
+        model.addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                if (e.getType() == TableModelEvent.UPDATE && e.getColumn() == 2 && !isUpdatingSchoolYear) { // 2 is the index of "School Year" column
+                    int editedRow = e.getFirstRow();
+                    String newValue = (String) model.getValueAt(editedRow, 2);
+                    updateSchoolYearColumn(newValue, editedRow);
+                }
+            }
+        });
+
+        // Ensure the table is empty upon initialization
+        updateData();
+    }
+
+    private void initializeBlocks() {
+        blocks = new ArrayList<>();
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        int rowCount = model.getRowCount();
+        int blockStart = 0;
+        while (blockStart < rowCount) {
+            List<Integer> block = new ArrayList<>();
+            for (int i = blockStart; i < blockStart + 13 && i < rowCount; i++) {
+                block.add(i);
+            }
+            blocks.add(block);
+            blockStart += 13;
         }
     }
 
     public void updateData() {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        model.setRowCount(0); // delete current data in the table
-
-        List<Map<String, Object>> data = TabScoresAction.Action();
-
-        if (studentNames != null) {
-            studentNames.clear(); // Clear the previous list of student names
-        }
-
-        AtomicInteger count = new AtomicInteger(0);
-        if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
-            data.forEach(row -> {
-                model.addRow(new Object[]{
-                        row.get("ID"), row.get("Student Name"), row.get("Subject"),
-                        row.get("School Year"),
-                        row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA"),
-                        "Delete"});
-                if (studentNames != null) {
-                    if (count.get() % 39 == 0) {
-                        studentNames.add((String) row.get("Student Name"));
-                    }
-                }
-                count.getAndIncrement();
-
-                // Add a separating row after every 39 rows
-                if (count.get() % 39 == 0) {
-                    model.addRow(new Object[]{"", "", "", "", "", "", "", "", "", ""});
-                }
-            });
-        } else {
-            data.forEach(row -> {
-                model.addRow(new Object[]{
-                        row.get("ID"), row.get("Student Name"), row.get("Subject"),
-                        row.get("School Year"),
-                        row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA")});
-            });
-        }
-        highlightSchoolYearColumn();
+        model.setRowCount(0); // Clear current data in the table
     }
 
-    private void highlightSchoolYearColumn() {
-        table.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                Component cell = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+    private void loadStudentNames() {
+        List<Map<String, Object>> data = TabScoresAction.Action();
+        studentNames.clear(); // Clear previous list of student names
+        studentNameToSchoolYears.clear(); // Clear previous map of student names to school years
 
-                DefaultTableModel model = (DefaultTableModel) table.getModel();
-                Object subject = model.getValueAt(row, 2); // Get the value of "Subject" column
+        data.forEach(row -> {
+            String studentName = (String) row.get("Student Name");
+            String schoolYear = (String) row.get("School Year");
+            studentNames.add(studentName);
+            studentNameToSchoolYears.computeIfAbsent(studentName, k -> new ArrayList<>()).add(schoolYear);
+        });
 
-                if (subject != null && subject.equals("Literature")) {
-                    // If the subject is "Literature", highlight the "School Year" column
-                    cell.setBackground(Color.RED);
-                    cell.setForeground(Color.WHITE);
-                } else {
-                    // Otherwise, reset to default colors
-                    cell.setBackground(table.getBackground());
-                    cell.setForeground(table.getForeground());
-                }
-
-                return cell;
-            }
+        // Remove duplicates and sort the school years for each student
+        studentNameToSchoolYears.forEach((key, value) -> {
+            List<String> uniqueSchoolYears = new ArrayList<>(new HashSet<>(value));
+            Collections.sort(uniqueSchoolYears);
+            studentNameToSchoolYears.put(key, uniqueSchoolYears);
         });
     }
 
-
     public void deleteRecord(int rowIndex) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        model.setValueAt("", rowIndex, 4); // 15 minutes column
-        model.setValueAt("", rowIndex, 5); // 1 hour column
-        model.setValueAt("", rowIndex, 6); // Mid term column
-        model.setValueAt("", rowIndex, 7
-        ); // Final exam column
-        model.setValueAt("0.0", rowIndex, 8); // GPA column
+        model.setValueAt("", rowIndex, 3); // 15 minutes column
+        model.setValueAt("", rowIndex, 4); // 1 hour column
+        model.setValueAt("", rowIndex, 5); // Mid term column
+        model.setValueAt("", rowIndex, 6); // Final exam column
+        model.setValueAt("0.0", rowIndex, 7); // GPA column
     }
 
     public JTable getTable() {
         return table;
     }
 
-    private void filterTableByStudentName(String studentName) {
+    private void filterTableByStudentNameAndSchoolYear(String studentName, String schoolYear) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        model.setRowCount(0);
+        model.setRowCount(0); // Clear all current rows
         List<Map<String, Object>> data = TabScoresAction.Action();
 
         for (Map<String, Object> row : data) {
-            if (row.get("Student Name").equals(studentName)) {
+            if (row.get("Student Name").equals(studentName) && row.get("School Year").equals(schoolYear)) {
                 if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
                     model.addRow(new Object[]{
-                            row.get("ID"), row.get("Student Name"), row.get("Subject"),
+                            row.get("Student Name"), row.get("Subject"),
                             row.get("School Year"),
                             row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA"),
                             "Delete"});
                 } else {
                     model.addRow(new Object[]{
-                            row.get("ID"), row.get("Student Name"), row.get("Subject"),
+                            row.get("Student Name"), row.get("Subject"),
                             row.get("School Year"),
                             row.get("15 minutes"), row.get("1 hour"), row.get("Mid term"), row.get("Final exam"), row.get("GPA")});
                 }
             }
         }
-        highlightSchoolYearColumn();
+        addBlankRowsEvery13Rows();
+    }
+
+    private void updateSchoolYearColumn(String newValue, int editedRow) {
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        isUpdatingSchoolYear = true; // Set the flag to true to prevent recursive updates
+        for (List<Integer> block : blocks) {
+            if (block.contains(editedRow)) {
+                for (int row : block) {
+                    if (model.getValueAt(row, 2) != null && !model.getValueAt(row, 2).toString().isEmpty()) {
+                        model.setValueAt(newValue, row, 2); // 2 is the index of "School Year" column
+                    }
+                }
+                break;
+            }
+        }
+        isUpdatingSchoolYear = false; // Reset the flag after updating
+    }
+
+    private void addBlankRowsEvery13Rows() {
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        for (int i = 13; i < model.getRowCount(); i += 14) {
+            model.insertRow(i, new Object[]{""}); // Add an empty row
+        }
+    }
+
+    private void hideColumn(JTable table, int columnIndex) {
+        TableColumn column = table.getColumnModel().getColumn(columnIndex);
+        column.setMinWidth(0);
+        column.setMaxWidth(0);
+        column.setPreferredWidth(0);
+        column.setResizable(false);
+    }
+
+    private void updateTableForCurrentSchoolYear() {
+        if (currentSchoolYears != null && !currentSchoolYears.isEmpty()) {
+            String currentSchoolYear = currentSchoolYears.get(currentSchoolYearIndex);
+            currentSchoolYearLabel.setText(currentSchoolYear);
+            String selectedItem = (String) searchBox.getSelectedItem();
+            if (selectedItem != null && !selectedItem.isEmpty()) {
+                String[] parts = selectedItem.split(" \\(");
+                String studentName = parts[0].trim();
+                filterTableByStudentNameAndSchoolYear(studentName, currentSchoolYear);
+                hideColumn(table, 0); // Hide the "Student Name" column
+                hideColumn(table, 2); // Hide the "School Year" column
+            }
+        }
     }
 }
