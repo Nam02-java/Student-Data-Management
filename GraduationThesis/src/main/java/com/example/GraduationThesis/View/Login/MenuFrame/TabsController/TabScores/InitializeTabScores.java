@@ -28,6 +28,7 @@ public class InitializeTabScores extends JPanel {
     private boolean isUpdatingSchoolYear; // Flag to prevent recursive updates
     private List<List<Integer>> blocks; // List of blocks, each block contains indices of 13 rows
     private JLabel currentSchoolYearLabel;
+    private JTextField editSchoolYearField;
     private List<String> currentSchoolYears;
     private int currentSchoolYearIndex;
 
@@ -130,11 +131,21 @@ public class InitializeTabScores extends JPanel {
         JButton rightButton = new JButton(">");
         JButton editButton = new JButton("Edit");
         currentSchoolYearLabel = new JLabel();
+        editSchoolYearField = new JTextField(10); // Initialize the text field but do not add to the panel yet
 
         leftButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (currentSchoolYears != null && currentSchoolYearIndex > 0) {
+                    if (navigationPanel.getComponent(1) instanceof JTextField) {
+                        String newSchoolYear = editSchoolYearField.getText();
+                        currentSchoolYears.set(currentSchoolYearIndex, newSchoolYear);
+                        updateTableForCurrentSchoolYear();
+                        navigationPanel.remove(editSchoolYearField);
+                        navigationPanel.add(currentSchoolYearLabel, 1);
+                        navigationPanel.revalidate();
+                        navigationPanel.repaint();
+                    }
                     currentSchoolYearIndex--;
                     updateTableForCurrentSchoolYear();
                 }
@@ -145,8 +156,43 @@ public class InitializeTabScores extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (currentSchoolYears != null && currentSchoolYearIndex < currentSchoolYears.size() - 1) {
+                    if (navigationPanel.getComponent(1) instanceof JTextField) {
+                        String newSchoolYear = editSchoolYearField.getText();
+                        currentSchoolYears.set(currentSchoolYearIndex, newSchoolYear);
+                        updateTableForCurrentSchoolYear();
+                        navigationPanel.remove(editSchoolYearField);
+                        navigationPanel.add(currentSchoolYearLabel, 1);
+                        navigationPanel.revalidate();
+                        navigationPanel.repaint();
+                    }
                     currentSchoolYearIndex++;
                     updateTableForCurrentSchoolYear();
+                }
+            }
+        });
+
+
+        editButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (navigationPanel.getComponent(1) instanceof JLabel) {
+                    String currentText = currentSchoolYearLabel.getText();
+                    editSchoolYearField.setText(currentText);
+                    navigationPanel.remove(currentSchoolYearLabel);
+                    navigationPanel.add(editSchoolYearField, 1);
+                    navigationPanel.revalidate();
+                    navigationPanel.repaint();
+                    editSchoolYearField.requestFocus();
+                } else {
+                    String newSchoolYear = editSchoolYearField.getText();
+                    if (!newSchoolYear.isEmpty()) {
+                        currentSchoolYears.set(currentSchoolYearIndex, newSchoolYear);
+                        updateTableForCurrentSchoolYear();
+                    }
+                    navigationPanel.remove(editSchoolYearField);
+                    navigationPanel.add(currentSchoolYearLabel, 1);
+                    navigationPanel.revalidate();
+                    navigationPanel.repaint();
                 }
             }
         });
@@ -300,3 +346,6 @@ public class InitializeTabScores extends JPanel {
         }
     }
 }
+
+
+
