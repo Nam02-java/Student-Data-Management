@@ -5,6 +5,7 @@ import com.example.GraduationThesis.Service.LazySingleton.ListRoles.ListRolesMan
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ActionType;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ButtonEditor;
 import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.DecoratorButton.ButtonRenderer;
+import com.example.GraduationThesis.View.Login.MenuFrame.TabsController.TabGeneralInformation.InitializeTabGeneralInformation;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
@@ -19,18 +20,24 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
+import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 public class InitializeTabScores extends JPanel {
 
     private JTable table;
     private JComboBox<String> searchBox;
-    private List<String> studentNames;
-    private Map<String, List<String>> studentNameToSchoolYears; // Map to store student name and their school years
-    private boolean isUpdatingSchoolYear; // Flag to prevent recursive updates
-    private List<List<Integer>> blocks; // List of blocks, each block contains indices of 13 rows
+    private JList<String> nameList;
+    private DefaultListModel<String> nameListModel;
+    private Set<String> studentNames;
+    private Map<String, List<String>> studentNameToSchoolYears;
+    private boolean isUpdatingSchoolYear;
+    private List<List<Integer>> blocks;
     private JLabel currentSchoolYearLabel;
     private JTextField editSchoolYearField;
     private List<String> currentSchoolYears;
     private int currentSchoolYearIndex;
+    private JComboBox<String> filterBox;
 
     public InitializeTabScores() {
         setLayout(new BorderLayout());
@@ -39,8 +46,7 @@ public class InitializeTabScores extends JPanel {
         DefaultTableModel model = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                // Disable editing for specific columns
-                return column != 0 && column != 7; // Column 0 is "Student Name", column 7 is "GPA"
+                return column != 0 && column != 7;
             }
         };
 
@@ -48,24 +54,14 @@ public class InitializeTabScores extends JPanel {
         table.setEnabled(false);
 
         if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
-
             columns = Arrays.copyOf(columns, columns.length + 1);
             columns[columns.length - 1] = "Delete";
-
             model.addColumn("Delete");
 
             TableColumn deleteButtonColumn = table.getColumnModel().getColumn(model.getColumnCount() - 1);
             deleteButtonColumn.setCellRenderer(new ButtonRenderer());
-
-            /**
-             * Enum type
-             * this tab is for student so we need delete student
-             * set DELETE_STUDENT like a flag
-             */
             ActionType actionType = ActionType.DELETE_STUDENT;
-
             deleteButtonColumn.setCellEditor(new ButtonEditor(new JCheckBox(), this, actionType));
-
             table.setEnabled(true);
         }
 
@@ -82,11 +78,51 @@ public class InitializeTabScores extends JPanel {
         searchPanel.add(searchBox);
         searchPanel.add(searchButton);
 
+        filterBox = new JComboBox<>();
+        filterBox.setEditable(false);
+
+        // Populate filterBox with unique addresses from testing map
+        Set<String> uniqueAddresses = new HashSet<>(InitializeTabGeneralInformation.testing.values());
+        for (String address : uniqueAddresses) {
+            filterBox.addItem(address);
+        }
+
+        filterBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                filterNamesByAddress((String) filterBox.getSelectedItem());
+            }
+        });
+
+        searchPanel.add(filterBox);
+
         add(searchPanel, BorderLayout.NORTH);
 
-        studentNames = new ArrayList<>();
+        // Adding name list panel
+        JPanel nameListPanel = new JPanel(new BorderLayout());
+        nameListModel = new DefaultListModel<>();
+        nameList = new JList<>(nameListModel);
+        nameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        nameListPanel.add(new JScrollPane(nameList), BorderLayout.CENTER);
+
+        add(nameListPanel, BorderLayout.EAST);
+
+        nameList.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    String selectedName = nameList.getSelectedValue();
+                    if (selectedName != null) {
+                        searchBox.setSelectedItem(selectedName);
+                        updateTableByStudentName(selectedName);
+                    }
+                }
+            }
+        });
+
+        studentNames = new HashSet<>();
         studentNameToSchoolYears = new HashMap<>();
-        loadStudentNames(); // Load the list of student names and school years
+        loadStudentNames();
 
         JTextField searchText = (JTextField) searchBox.getEditor().getEditorComponent();
         searchText.addKeyListener(new KeyAdapter() {
@@ -104,6 +140,11 @@ public class InitializeTabScores extends JPanel {
                     }
                     searchText.setText(input);
                     searchBox.setPopupVisible(true);
+                } else {
+                    // Display all student names if input is empty
+                    for (String name : studentNames) {
+                        searchBox.addItem(name);
+                    }
                 }
             }
         });
@@ -131,7 +172,7 @@ public class InitializeTabScores extends JPanel {
         JButton rightButton = new JButton(">");
         JButton editButton = new JButton("Edit");
         currentSchoolYearLabel = new JLabel();
-        editSchoolYearField = new JTextField(10); // Initialize the text field but do not add to the panel yet
+        editSchoolYearField = new JTextField(10);
 
         leftButton.addActionListener(new ActionListener() {
             @Override
@@ -170,7 +211,6 @@ public class InitializeTabScores extends JPanel {
                 }
             }
         });
-
 
         editButton.addActionListener(new ActionListener() {
             @Override
@@ -211,7 +251,7 @@ public class InitializeTabScores extends JPanel {
         model.addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
-                if (e.getType() == TableModelEvent.UPDATE && e.getColumn() == 2 && !isUpdatingSchoolYear) { // 2 is the index of "School Year" column
+                if (e.getType() == TableModelEvent.UPDATE && e.getColumn() == 2 && !isUpdatingSchoolYear) {
                     int editedRow = e.getFirstRow();
                     String newValue = (String) model.getValueAt(editedRow, 2);
                     updateSchoolYearColumn(newValue, editedRow);
@@ -240,45 +280,39 @@ public class InitializeTabScores extends JPanel {
 
     public void updateData() {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        model.setRowCount(0); // Clear current data in the table
+        model.setRowCount(0);
     }
 
     private void loadStudentNames() {
         List<Map<String, Object>> data = TabScoresAction.Action();
-        studentNames.clear(); // Clear previous list of student names
-        studentNameToSchoolYears.clear(); // Clear previous map of student names to school years
+        studentNames.clear();
+        studentNameToSchoolYears.clear();
+        nameListModel.clear();
 
         data.forEach(row -> {
             String studentName = (String) row.get("Student Name");
             String schoolYear = (String) row.get("School Year");
+            String address = (String) row.get("Address"); // Add this line to get address from row data
             studentNames.add(studentName);
             studentNameToSchoolYears.computeIfAbsent(studentName, k -> new ArrayList<>()).add(schoolYear);
         });
 
-        // Remove duplicates and sort the school years for each student
         studentNameToSchoolYears.forEach((key, value) -> {
             List<String> uniqueSchoolYears = new ArrayList<>(new HashSet<>(value));
             Collections.sort(uniqueSchoolYears);
             studentNameToSchoolYears.put(key, uniqueSchoolYears);
         });
-    }
 
-    public void deleteRecord(int rowIndex) {
-        DefaultTableModel model = (DefaultTableModel) table.getModel();
-        model.setValueAt("", rowIndex, 3); // 15 minutes column
-        model.setValueAt("", rowIndex, 4); // 1 hour column
-        model.setValueAt("", rowIndex, 5); // Mid term column
-        model.setValueAt("", rowIndex, 6); // Final exam column
-        model.setValueAt("0.0", rowIndex, 7); // GPA column
-    }
-
-    public JTable getTable() {
-        return table;
+        // Populate the searchBox with unique student names
+        for (String name : studentNames) {
+            searchBox.addItem(name);
+            nameListModel.addElement(name);
+        }
     }
 
     private void filterTableByStudentNameAndSchoolYear(String studentName, String schoolYear) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        model.setRowCount(0); // Clear all current rows
+        model.setRowCount(0);
         List<Map<String, Object>> data = TabScoresAction.Action();
 
         for (Map<String, Object> row : data) {
@@ -302,24 +336,34 @@ public class InitializeTabScores extends JPanel {
 
     private void updateSchoolYearColumn(String newValue, int editedRow) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        isUpdatingSchoolYear = true; // Set the flag to true to prevent recursive updates
+        isUpdatingSchoolYear = true;
         for (List<Integer> block : blocks) {
             if (block.contains(editedRow)) {
                 for (int row : block) {
                     if (model.getValueAt(row, 2) != null && !model.getValueAt(row, 2).toString().isEmpty()) {
-                        model.setValueAt(newValue, row, 2); // 2 is the index of "School Year" column
+                        model.setValueAt(newValue, row, 2);
                     }
                 }
                 break;
             }
         }
-        isUpdatingSchoolYear = false; // Reset the flag after updating
+        isUpdatingSchoolYear = false;
+    }
+
+    private void updateTableByStudentName(String studentName) {
+        if (studentName != null && !studentName.isEmpty()) {
+            currentSchoolYears = studentNameToSchoolYears.get(studentName);
+            if (currentSchoolYears != null && !currentSchoolYears.isEmpty()) {
+                currentSchoolYearIndex = 0;
+                updateTableForCurrentSchoolYear();
+            }
+        }
     }
 
     private void addBlankRowsEvery13Rows() {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         for (int i = 13; i < model.getRowCount(); i += 14) {
-            model.insertRow(i, new Object[]{""}); // Add an empty row
+            model.insertRow(i, new Object[]{""});
         }
     }
 
@@ -340,12 +384,35 @@ public class InitializeTabScores extends JPanel {
                 String[] parts = selectedItem.split(" \\(");
                 String studentName = parts[0].trim();
                 filterTableByStudentNameAndSchoolYear(studentName, currentSchoolYear);
-                hideColumn(table, 0); // Hide the "Student Name" column
-                hideColumn(table, 2); // Hide the "School Year" column
+                hideColumn(table, 0);
+                hideColumn(table, 2);
+            }
+        }
+    }
+
+    // Method to delete record
+    public void deleteRecord(int rowToDelete) {
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        model.removeRow(rowToDelete);
+    }
+
+    // Getter for JTable
+    public JTable getTable() {
+        return table;
+    }
+
+    private void filterNamesByAddress(String address) {
+        nameListModel.clear();
+        if (address == null || address.isEmpty()) {
+            for (String name : studentNames) {
+                nameListModel.addElement(name);
+            }
+        } else {
+            for (Map.Entry<String, String> entry : InitializeTabGeneralInformation.testing.entrySet()) {
+                if (entry.getValue().equals(address)) {
+                    nameListModel.addElement(entry.getKey());
+                }
             }
         }
     }
 }
-
-
-

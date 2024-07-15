@@ -16,23 +16,35 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Arrays;
 
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import java.util.List;
+
 public class InitializeTabGeneralInformation extends JPanel {
 
     public JTable table;
     private List<String> studentNames;
+    public static Map<String, String> testing;
+    private static final DecimalFormat df = new DecimalFormat("#.#");
+
 
     public InitializeTabGeneralInformation() {
         setLayout(new BorderLayout());
 
-        // all columns in table
+        // All columns in table
         String[] columns = {"ID", "Student Name", "Class Name", "Position", "Teacher Name", "Address", "Number Phone", "GPA"};
 
-        // disable editing of edit and gpa columns
+        // Disable editing of ID and GPA columns
         DefaultTableModel model = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -41,41 +53,27 @@ public class InitializeTabGeneralInformation extends JPanel {
         };
 
         table = new JTable(model);
-
-
         table.setEnabled(false);
-        // Thêm cột cho nút "Delete"
-        if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
 
+        // Add column for "Delete" button if user is admin
+        if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
             columns = Arrays.copyOf(columns, columns.length + 1);
             columns[columns.length - 1] = "Delete";
-
             model.addColumn("Delete");
 
             TableColumn deleteButtonColumn = table.getColumnModel().getColumn(model.getColumnCount() - 1);
             deleteButtonColumn.setCellRenderer(new ButtonRenderer());
-
-            /**
-             * Enum type
-             * this tab is for student so we need delete student
-             * set DELETE_STUDENT like a flag
-             */
             ActionType actionType = ActionType.DELETE_STUDENT;
-
             deleteButtonColumn.setCellEditor(new ButtonEditor(new JCheckBox(), this, actionType));
-
-
             table.setEnabled(true);
         }
 
-        // Thêm bảng vào JScrollPane để có thanh cuộn khi cần thiết
+        // Add table to JScrollPane for scrolling
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
 
-
+        // Add search panel if user is admin
         if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
-
-            // Search tool
             JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
             JComboBox<String> searchBox = new JComboBox<>();
             searchBox.setEditable(true);
@@ -127,18 +125,15 @@ public class InitializeTabGeneralInformation extends JPanel {
 
     public void updateData() {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-
-        // delete data in table
-        model.setRowCount(0);
+        model.setRowCount(0); // Clear previous data in table
 
         List<Map<String, Object>> data = TabGeneralInformationAction.Action();
 
         if (studentNames != null) {
-            studentNames.clear(); // Clear the previous list of student names
+            studentNames.clear(); // Clear previous list of student names
         }
 
         if (ListRolesManager.getInstance().getRoles().contains(ERole.ROLE_ADMIN.toString())) {
-
             data.forEach(row -> {
                 model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Class Name"),
                         row.get("Position"), row.get("Teacher Name"), row.get("Address"), row.get("Number Phone"),
@@ -146,17 +141,25 @@ public class InitializeTabGeneralInformation extends JPanel {
                 studentNames.add((String) row.get("Student Name"));
             });
         } else {
-
             data.forEach(row -> model.addRow(new Object[]{row.get("ID"), row.get("Student Name"), row.get("Class Name"),
                     row.get("Position"), row.get("Teacher Name"), row.get("Address"), row.get("Number Phone"), row.get("GPA")}));
+        }
+
+        // Add data to testing map
+        if (testing == null) {
+            testing = new HashMap<>();
+        }
+        for (Map<String, Object> row : data) {
+            String studentName = (String) row.get("Student Name");
+            Double GPA = (Double) row.get("GPA"); // Ensure GPA is treated as a Double
+            String formattedGpa = df.format(GPA); // Format GPA to one decimal place
+            testing.put(studentName, formattedGpa);
         }
     }
 
     public void deleteRecord(int rowIndex) {
-
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         model.removeRow(rowIndex);
-
     }
 
     public JTable getTable() {
